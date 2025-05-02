@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 260 25% 98%;
+    --foreground: 260 10% 10%;
+
+    --card: 260 25% 98%;
+    --card-foreground: 260 10% 10%;
+
+    --popover: 260 25% 98%;
+    --popover-foreground: 260 10% 10%;
+
+    --primary: 265 89% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 260 40% 96%;
+    --secondary-foreground: 260 30% 30%;
+
+    --muted: 260 20% 96%;
+    --muted-foreground: 260 10% 40%;
+
+    --accent: 265 70% 90%;
+    --accent-foreground: 260 30% 30%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 260 20% 90%;
+    --input: 260 20% 90%;
+    --ring: 265 89% 60%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 260 25% 10%;
+    --foreground: 260 10% 98%;
+
+    --card: 260 25% 12%;
+    --card-foreground: 260 10% 98%;
+
+    --popover: 260 25% 12%;
+    --popover-foreground: 260 10% 98%;
+
+    --primary: 265 89% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 260 30% 15%;
+    --secondary-foreground: 260 10% 98%;
+
+    --muted: 260 20% 20%;
+    --muted-foreground: 260 10% 70%;
+
+    --accent: 265 70% 20%;
+    --accent-foreground: 260 10% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 260 20% 20%;
+    --input: 260 20% 20%;
+    --ring: 265 89% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-400;
+}
+
+.gradient-bg {
+  @apply bg-gradient-to-br from-purple-500 to-purple-700;
+}
+
+.glass-effect {
+  @apply bg-white/10 backdrop-blur-md border border-white/20;
+}
+
+.dark .glass-effect {
+  @apply bg-black/20 backdrop-blur-md border border-white/10;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-purple-300/50 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-purple-400/70;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-purple-700/50;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-purple-600/70;
+}
+
+/* Animations */
+.animate-enter {
+  animation: scale-in 0.2s ease-out forwards;
+}
+
+.animate-exit {
+  animation: fade-out 0.2s ease-out forwards;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
