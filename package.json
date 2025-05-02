@@ -11,6 +11,7 @@
   "dependencies": {
     "@privy-io/react-auth": "^1.40.3",
     "@hookform/resolvers": "^3.9.1",
+    "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-context-menu": "2.2.4",
     "@radix-ui/react-dialog": "1.1.4",
     "@radix-ui/react-dropdown-menu": "2.1.4",
@@ -49,7 +50,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.54.2",
-
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
