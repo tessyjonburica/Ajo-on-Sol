@@ -235,7 +235,7 @@ export default function Navbar() {
                       src="/logo.png"
                       alt="Ajo on Sol Logo"
                       fill
-                      className="object-cover"
+                      className="object-contain"
                       sizes="40px"
                       priority
                     />
