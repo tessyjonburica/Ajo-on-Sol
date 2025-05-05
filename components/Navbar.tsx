@@ -62,6 +62,7 @@ export default function Navbar() {
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-700 text-white shadow-md">
                 <span className="text-2xl font-bold">A</span>
+                <span className="text-2xl font-bold">A</span>
               </div>
               <motion.div
                 initial={{ scale: 0 }}
@@ -78,7 +79,7 @@ export default function Navbar() {
               transition={{ delay: 0.1 }}
               className="text-2xl font-bold tracking-tight text-foreground"
             >
-              Ajo for Sol
+              Ajo on Sol
             </motion.span>
           </Link>
         </div>
