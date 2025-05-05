@@ -47,8 +47,8 @@ export default function Navbar() {
       className={cn(
         "sticky top-0 z-50 w-full border-b transition-all duration-300",
         scrolled
-          ? "border-border/40 bg-background/95 backdrop-blur-md shadow-sm"
-          : "border-transparent bg-background/80 backdrop-blur-sm",
+          ? "border-border bg-background/95 backdrop-blur-md shadow-sm"
+          : "border-transparent bg-background/90 backdrop-blur-md",
       )}
     >
       <div className="container flex h-20 items-center justify-between px-4 md:px-6">
@@ -134,7 +134,10 @@ export default function Navbar() {
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-popover/95 backdrop-blur-sm border border-border shadow-lg"
+                >
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
@@ -188,14 +191,14 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden"
           >
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed inset-y-0 right-0 w-full max-w-xs border-l border-border bg-background p-6 shadow-lg"
+              className="fixed inset-y-0 right-0 w-full max-w-xs border-l border-border bg-background shadow-xl"
             >
               <div className="flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
@@ -222,8 +225,8 @@ export default function Navbar() {
                     className={cn(
                       "flex items-center gap-3 rounded-md px-4 py-3 text-base font-medium transition-colors",
                       isActive(item.href)
-                        ? "bg-purple-100 text-purple-900 dark:bg-purple-900/20 dark:text-purple-50"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        ? "bg-purple-100 text-purple-900 dark:bg-purple-800/50 dark:text-white"
+                        : "text-foreground hover:bg-accent hover:text-foreground",
                     )}
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -235,7 +238,7 @@ export default function Navbar() {
 
               <div className="mt-auto pt-8">
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3 rounded-md px-4 py-3">
+                  <div className="flex items-center gap-3 rounded-md px-4 py-3 bg-accent/50">
                     <Avatar className="h-12 w-12 border border-border">
                       <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name || ""} />
                       <AvatarFallback className="bg-purple-100 text-purple-800">
@@ -243,8 +246,8 @@ export default function Navbar() {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-base font-medium">{user?.name || "User"}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-base font-medium text-foreground">{user?.name || "User"}</p>
+                      <p className="text-sm font-medium text-muted-foreground">
                         {user?.wallet.address.slice(0, 6)}...{user?.wallet.address.slice(-4)}
                       </p>
                     </div>

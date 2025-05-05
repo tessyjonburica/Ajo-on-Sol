@@ -301,8 +301,7 @@ export default function DashboardPage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      <JoinPoolModal open={isJoinModalOpen} onOpenChange={setIsJoinModalOpen} onSuccess={handleRefresh} />
+      
     </AuthGate>
   )
 }

@@ -3,32 +3,49 @@ import { type Pool, MOCK_POOLS, type Transaction } from "./solana"
 
 // Create a new pool
 export const createPool = async (poolData: Partial<Pool>): Promise<Pool> => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 2000))
+  try {
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
-  const newPool: Pool = {
-    id: `pool_${Date.now()}`,
-    name: poolData.name || "Unnamed Pool",
-    description: poolData.description || "",
-    creator: poolData.creator || "",
-    members: poolData.members || [],
-    contributionAmount: poolData.contributionAmount || 0,
-    contributionToken: poolData.contributionToken || "",
-    contributionTokenSymbol: poolData.contributionTokenSymbol || "",
-    frequency: poolData.frequency || "weekly",
-    totalMembers: poolData.totalMembers || 0,
-    currentMembers: poolData.members?.length || 0,
-    startDate: poolData.startDate || new Date(),
-    endDate: poolData.endDate || new Date(),
-    nextPayoutDate: poolData.nextPayoutDate || new Date(),
-    nextPayoutMember: poolData.nextPayoutMember || "",
-    totalContributed: 0,
-    yieldEnabled: poolData.yieldEnabled || false,
-    currentYield: poolData.yieldEnabled ? 2.5 : undefined,
-    status: "pending",
+    const newPool: Pool = {
+      id: `pool_${Date.now()}`,
+      name: poolData.name || "Unnamed Pool",
+      description: poolData.description || "",
+      creator: poolData.creator || "",
+      members: poolData.members || [],
+      contributionAmount: poolData.contributionAmount || 0,
+      contributionToken: poolData.contributionToken || "",
+      contributionTokenSymbol: poolData.contributionTokenSymbol || "",
+      frequency: poolData.frequency || "weekly",
+      totalMembers: poolData.totalMembers || 0,
+      currentMembers: poolData.members?.length || 0,
+      startDate: poolData.startDate || new Date(),
+      endDate: poolData.endDate || new Date(),
+      nextPayoutDate: poolData.nextPayoutDate || new Date(),
+      nextPayoutMember: poolData.nextPayoutMember || "",
+      totalContributed: 0,
+      yieldEnabled: poolData.yieldEnabled || false,
+      currentYield: poolData.yieldEnabled ? 2.5 : undefined,
+      status: "pending",
+      slug: poolData.slug || generateSlug(poolData.name || ""),
+    }
+
+    // Add to mock pools (in a real app, this would be a database operation)
+    MOCK_POOLS.push(newPool)
+
+    return newPool
+  } catch (error) {
+    console.error("API Error creating pool:", error)
+    throw new Error("Failed to create pool. Please check your connection and try again.")
   }
+}
 
-  return newPool
+// Helper function to generate a slug
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
 }
 
 // Join an existing pool
@@ -51,6 +68,12 @@ export const joinPool = async (poolId: string, walletAddress: string): Promise<P
     ...pool,
     members: [...pool.members, walletAddress],
     currentMembers: pool.currentMembers + 1,
+  }
+
+  // Update the pool in the mock data
+  const poolIndex = MOCK_POOLS.findIndex((p) => p.id === poolId)
+  if (poolIndex !== -1) {
+    MOCK_POOLS[poolIndex] = updatedPool
   }
 
   return updatedPool
@@ -131,6 +154,69 @@ export const withdrawFromPool = async (poolId: string, walletAddress: string, am
     timestamp: new Date(),
     status: "confirmed",
     signature: `${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`,
+  }
+
+  return transaction
+}
+
+// Process payout for a pool
+export const processPoolPayout = async (poolId: string, recipientAddress: string): Promise<Transaction> => {
+  // Simulate API call
+  await new Promise((resolve) => setTimeout(resolve, 2000))
+
+  const pool = MOCK_POOLS.find((p) => p.id === poolId)
+  if (!pool) {
+    throw new Error("Pool not found")
+  }
+
+  // Calculate payout amount (in a real app, this would be based on pool rules)
+  const payoutAmount = pool.contributionAmount * pool.currentMembers
+
+  // Create transaction
+  const transaction: Transaction = {
+    id: `tx_${Date.now()}`,
+    poolId,
+    type: "payout",
+    amount: payoutAmount,
+    token: pool.contributionToken,
+    tokenSymbol: pool.contributionTokenSymbol,
+    sender: poolId,
+    recipient: recipientAddress,
+    timestamp: new Date(),
+    status: "confirmed",
+    signature: `${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`,
+  }
+
+  // Update the pool's next payout information
+  const poolIndex = MOCK_POOLS.findIndex((p) => p.id === poolId)
+  if (poolIndex !== -1) {
+    // Calculate next payout date based on frequency
+    const nextPayoutDate = new Date()
+    switch (pool.frequency) {
+      case "daily":
+        nextPayoutDate.setDate(nextPayoutDate.getDate() + 1)
+        break
+      case "weekly":
+        nextPayoutDate.setDate(nextPayoutDate.getDate() + 7)
+        break
+      case "biweekly":
+        nextPayoutDate.setDate(nextPayoutDate.getDate() + 14)
+        break
+      case "monthly":
+        nextPayoutDate.setMonth(nextPayoutDate.getMonth() + 1)
+        break
+    }
+
+    // Determine next recipient (simple round-robin in this mock)
+    const currentRecipientIndex = pool.members.indexOf(recipientAddress)
+    const nextRecipientIndex = (currentRecipientIndex + 1) % pool.members.length
+    const nextRecipient = pool.members[nextRecipientIndex]
+
+    MOCK_POOLS[poolIndex] = {
+      ...pool,
+      nextPayoutDate,
+      nextPayoutMember: nextRecipient,
+    }
   }
 
   return transaction

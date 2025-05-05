@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 const frequencies = [
   { value: "daily", label: "Daily" },
@@ -46,16 +47,46 @@ export default function CreatePoolForm() {
     endDate: "",
     yieldEnabled: false,
   })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const [openTokenSelect, setOpenTokenSelect] = useState(false)
+
+  // Generate a slug from the pool name
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+
+    // Clear error for this field when user types
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return newErrors
+      })
+    }
   }
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
+
+    // Clear error for this field when user selects
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[name]
+        return newErrors
+      })
+    }
   }
 
   const handleTokenSelect = (mint: string, symbol: string) => {
@@ -65,14 +96,77 @@ export default function CreatePoolForm() {
       contributionTokenSymbol: symbol,
     }))
     setOpenTokenSelect(false)
+
+    // Clear error for this field when user selects
+    if (errors.contributionToken) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors.contributionToken
+        return newErrors
+      })
+    }
   }
 
   const handleSwitchChange = (checked: boolean) => {
     setFormData((prev) => ({ ...prev, yieldEnabled: checked }))
   }
 
+  const validateStep = () => {
+    const newErrors: Record<string, string> = {}
+
+    if (step === 1) {
+      if (!formData.name.trim()) {
+        newErrors.name = "Pool name is required"
+      } else if (formData.name.length < 3) {
+        newErrors.name = "Pool name must be at least 3 characters"
+      }
+
+      if (!formData.description.trim()) {
+        newErrors.description = "Description is required"
+      }
+    } else if (step === 2) {
+      if (!formData.contributionAmount) {
+        newErrors.contributionAmount = "Contribution amount is required"
+      } else if (Number(formData.contributionAmount) <= 0) {
+        newErrors.contributionAmount = "Contribution amount must be greater than 0"
+      }
+
+      if (!formData.contributionToken) {
+        newErrors.contributionToken = "Please select a token"
+      }
+
+      if (!formData.totalMembers) {
+        newErrors.totalMembers = "Total members is required"
+      } else if (Number(formData.totalMembers) < 2) {
+        newErrors.totalMembers = "Pool must have at least 2 members"
+      } else if (Number(formData.totalMembers) > 100) {
+        newErrors.totalMembers = "Pool cannot have more than 100 members"
+      }
+    } else if (step === 3) {
+      if (!formData.startDate) {
+        newErrors.startDate = "Start date is required"
+      }
+
+      if (!formData.endDate) {
+        newErrors.endDate = "End date is required"
+      } else if (new Date(formData.startDate) >= new Date(formData.endDate)) {
+        newErrors.endDate = "End date must be after start date"
+      }
+
+      // Validate that start date is not in the past
+      if (formData.startDate && new Date(formData.startDate) < new Date(new Date().setHours(0, 0, 0, 0))) {
+        newErrors.startDate = "Start date cannot be in the past"
+      }
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const nextStep = () => {
-    setStep((prev) => prev + 1)
+    if (validateStep()) {
+      setStep((prev) => prev + 1)
+    }
   }
 
   const prevStep = () => {
@@ -81,7 +175,19 @@ export default function CreatePoolForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!validateStep()) {
+      return
+    }
+
+    // If not showing confirmation yet, show it first
+    if (!showConfirmation) {
+      setShowConfirmation(true)
+      return
+    }
+
     setIsSubmitting(true)
+    setErrorMessage(null)
 
     try {
       // Convert string values to appropriate types
@@ -93,14 +199,17 @@ export default function CreatePoolForm() {
         totalMembers: Number.parseInt(formData.totalMembers),
         startDate: new Date(formData.startDate),
         endDate: new Date(formData.endDate),
+        slug: generateSlug(formData.name),
       }
 
-      await createPool(poolData)
+      const newPool = await createPool(poolData)
 
       // Redirect to dashboard after successful creation
-      router.push("/dashboard")
+      router.push(`/pool/${newPool.id}/${generateSlug(formData.name)}`)
     } catch (error) {
       console.error("Error creating pool:", error)
+      setErrorMessage((error as Error).message || "Failed to create pool. Please try again.")
+      setShowConfirmation(false)
     } finally {
       setIsSubmitting(false)
     }
@@ -140,8 +249,9 @@ export default function CreatePoolForm() {
                   placeholder="e.g., Lagos Traders Group"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full"
+                  className={cn("w-full", errors.name && "border-red-500")}
                 />
+                {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
@@ -151,8 +261,9 @@ export default function CreatePoolForm() {
                   placeholder="Describe the purpose of this savings pool"
                   value={formData.description}
                   onChange={handleChange}
-                  className="min-h-[100px] w-full"
+                  className={cn("min-h-[100px] w-full", errors.description && "border-red-500")}
                 />
+                {errors.description && <p className="text-xs text-red-500">{errors.description}</p>}
               </div>
             </CardContent>
           </motion.div>
@@ -182,9 +293,10 @@ export default function CreatePoolForm() {
                       placeholder="50"
                       value={formData.contributionAmount}
                       onChange={handleChange}
-                      className="pl-9"
+                      className={cn("pl-9", errors.contributionAmount && "border-red-500")}
                     />
                   </div>
+                  {errors.contributionAmount && <p className="text-xs text-red-500">{errors.contributionAmount}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="contributionToken">Token</Label>
@@ -194,7 +306,7 @@ export default function CreatePoolForm() {
                         variant="outline"
                         role="combobox"
                         aria-expanded={openTokenSelect}
-                        className="w-full justify-between"
+                        className={cn("w-full justify-between", errors.contributionToken && "border-red-500")}
                       >
                         {formData.contributionTokenSymbol || "Select token"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -241,6 +353,7 @@ export default function CreatePoolForm() {
                       </Command>
                     </PopoverContent>
                   </Popover>
+                  {errors.contributionToken && <p className="text-xs text-red-500">{errors.contributionToken}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -270,9 +383,10 @@ export default function CreatePoolForm() {
                       placeholder="10"
                       value={formData.totalMembers}
                       onChange={handleChange}
-                      className="pl-9"
+                      className={cn("pl-9", errors.totalMembers && "border-red-500")}
                     />
                   </div>
+                  {errors.totalMembers && <p className="text-xs text-red-500">{errors.totalMembers}</p>}
                 </div>
               </div>
             </CardContent>
@@ -302,9 +416,10 @@ export default function CreatePoolForm() {
                       type="date"
                       value={formData.startDate}
                       onChange={handleChange}
-                      className="pl-9"
+                      className={cn("pl-9", errors.startDate && "border-red-500")}
                     />
                   </div>
+                  {errors.startDate && <p className="text-xs text-red-500">{errors.startDate}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="endDate">End Date</Label>
@@ -316,9 +431,10 @@ export default function CreatePoolForm() {
                       type="date"
                       value={formData.endDate}
                       onChange={handleChange}
-                      className="pl-9"
+                      className={cn("pl-9", errors.endDate && "border-red-500")}
                     />
                   </div>
+                  {errors.endDate && <p className="text-xs text-red-500">{errors.endDate}</p>}
                 </div>
               </div>
               <div className="space-y-2 pt-4">
@@ -386,6 +502,22 @@ export default function CreatePoolForm() {
                   </div>
                 </div>
               </div>
+
+              {showConfirmation && (
+                <Alert className="bg-amber-50 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                  <AlertTitle>Confirm Pool Creation</AlertTitle>
+                  <AlertDescription>
+                    Are you sure you want to create this pool? This action cannot be undone.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {errorMessage && (
+                <Alert variant="destructive">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{errorMessage}</AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </motion.div>
         )
@@ -400,8 +532,13 @@ export default function CreatePoolForm() {
         {renderStep()}
         <CardFooter className="flex justify-between">
           {step > 1 ? (
-            <Button type="button" variant="outline" onClick={prevStep} disabled={isSubmitting}>
-              Back
+            <Button
+              type="button"
+              variant="outline"
+              onClick={step === 4 && showConfirmation ? () => setShowConfirmation(false) : prevStep}
+              disabled={isSubmitting}
+            >
+              {step === 4 && showConfirmation ? "Cancel" : "Back"}
             </Button>
           ) : (
             <div></div>
@@ -424,6 +561,8 @@ export default function CreatePoolForm() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating...
                 </>
+              ) : showConfirmation ? (
+                "Confirm & Create"
               ) : (
                 "Create Pool"
               )}
