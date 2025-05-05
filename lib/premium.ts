@@ -1,5 +1,5 @@
 /**
- * Premium features management for Ajo for Sol
+ * Premium features management for Ajo on Sol
  * Centralizes premium status checks and feature access control
  */
 

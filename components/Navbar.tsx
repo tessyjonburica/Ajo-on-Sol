@@ -206,7 +206,7 @@ export default function Navbar() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 text-white">
                     <span className="text-lg font-bold">A</span>
                   </div>
-                  <span className="text-xl font-bold">Ajo for Sol</span>
+                  <span className="text-xl font-bold">Ajo on Sol</span>
                 </Link>
                 <Button
                   variant="ghost"

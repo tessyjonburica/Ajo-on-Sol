@@ -73,7 +73,7 @@ export default function Home() {
   const testimonials = [
     {
       quote:
-        "Ajo for Sol has transformed how our market traders save money. It's familiar but with all the benefits of blockchain.",
+        "Ajo on Sol has transformed how our market traders save money. It's familiar but with all the benefits of blockchain.",
       author: "Adebayo O.",
       role: "Market Association Leader",
       avatar: "A",
@@ -130,7 +130,7 @@ export default function Home() {
                   <span className="mt-2 block gradient-text">Powered by Solana</span>
                 </h1>
                 <p className="mt-8 max-w-lg text-xl leading-relaxed text-muted-foreground">
-                  Ajo for Sol brings the traditional Nigerian savings system to the blockchain, enabling secure,
+                  Ajo on Sol brings the traditional Nigerian savings system to the blockchain, enabling secure,
                   transparent, and efficient community savings pools.
                 </p>
                 <div className="mt-10 flex flex-col gap-4 sm:flex-row">
@@ -265,7 +265,7 @@ export default function Home() {
             >
               <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Modern Technology, Traditional Values</h2>
               <p className="mt-6 text-xl text-muted-foreground">
-                Ajo for Sol combines the cultural familiarity of traditional Nigerian savings systems with the security
+                Ajo on Sol combines the cultural familiarity of traditional Nigerian savings systems with the security
                 and efficiency of blockchain technology.
               </p>
             </motion.div>
@@ -302,7 +302,7 @@ export default function Home() {
               transition={{ duration: 0.7 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">How Ajo for Sol Works</h2>
+              <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">How Ajo on Sol Works</h2>
               <p className="mt-6 text-xl text-muted-foreground">
                 Get started with your community savings pool in just a few simple steps
               </p>
@@ -346,7 +346,7 @@ export default function Home() {
             >
               <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">What Our Users Say</h2>
               <p className="mt-6 text-xl text-muted-foreground">
-                Join thousands of Nigerians who are already using Ajo for Sol
+                Join thousands of Nigerians who are already using Ajo on Sol
               </p>
             </motion.div>
           </div>
@@ -403,7 +403,7 @@ export default function Home() {
             >
               <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Ready to Start Your Savings Journey?</h2>
               <p className="mt-6 text-xl text-purple-100">
-                Join Ajo for Sol today and experience the future of community savings
+                Join Ajo on Sol today and experience the future of community savings
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 {isAuthenticated ? (
@@ -467,7 +467,7 @@ export default function Home() {
             >
               <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Benefits of Blockchain-Powered Savings</h2>
               <p className="mt-6 text-xl text-muted-foreground">
-                Ajo for Sol brings numerous advantages over traditional savings methods
+                Ajo on Sol brings numerous advantages over traditional savings methods
               </p>
 
               <div className="mt-10 space-y-6">

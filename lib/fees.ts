@@ -1,5 +1,5 @@
 /**
- * Fee calculation utilities for Ajo for Sol
+ * Fee calculation utilities for Ajo on Sol
  * Handles platform fees, penalties, and premium discounts
  */
 

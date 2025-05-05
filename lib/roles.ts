@@ -1,5 +1,5 @@
 /**
- * Access control utility functions for Ajo for Sol
+ * Access control utility functions for Ajo on Sol
  * Handles permission checks for pool creators, members, and admins
  */
 

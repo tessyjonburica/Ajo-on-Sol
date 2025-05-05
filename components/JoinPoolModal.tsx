@@ -87,8 +87,8 @@ export default function JoinPoolModal({ pool, trigger, defaultOpen = false, onSu
   const shareLink = () => {
     if (pool && navigator.share) {
       navigator.share({
-        title: `Join ${pool.name} on Ajo for Sol`,
-        text: `I'm inviting you to join my savings pool "${pool.name}" on Ajo for Sol.`,
+        title: `Join ${pool.name} on Ajo on Sol`,
+        text: `I'm inviting you to join my savings pool "${pool.name}" on Ajo on Sol.`,
         url: `${window.location.origin}/join/${pool.id}`,
       })
     } else {

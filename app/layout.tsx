@@ -9,7 +9,7 @@ import Navbar from "@/components/Navbar"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Ajo for Sol | Community Savings on Solana",
+  title: "Ajo on Sol | Community Savings on Solana",
   description: "A decentralized savings pool dApp inspired by the traditional Nigerian 'ajo' system, built on Solana.",
     generator: 'v0.dev'
 }
@@ -30,7 +30,7 @@ export default function RootLayout({
               <footer className="border-t border-border/40 py-6">
                 <div className="container flex flex-col items-center justify-between gap-4 px-4 text-center md:flex-row md:text-left">
                   <p className="text-sm text-muted-foreground">
-                    &copy; {new Date().getFullYear()} Ajo for Sol. All rights reserved.
+                    &copy; {new Date().getFullYear()} Ajo on Sol. All rights reserved.
                   </p>
                   <div className="flex items-center gap-4">
                     <a href="#" className="text-sm text-muted-foreground hover:text-foreground">
