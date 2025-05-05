@@ -74,7 +74,7 @@ export default function Navbar() {
                 src="/logo.png"
                 alt="Ajo on Sol Logo"
                 fill
-                className="rounded-full object-cover shadow-md"
+                className=" object-cover"
                 sizes="48px"
                 priority
               />
@@ -230,9 +230,17 @@ export default function Navbar() {
                   className="flex items-center gap-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-600 text-white">
-                    <span className="text-lg font-bold">A</span>
+                  <div className="relative h-10 w-10">
+                    <Image
+                      src="/logo.png"
+                      alt="Ajo on Sol Logo"
+                      fill
+                      className="object-cover"
+                      sizes="40px"
+                      priority
+                    />
                   </div>
+
                   <span className="text-xl font-bold">Ajo on Sol</span>
                 </Link>
                 <Button
