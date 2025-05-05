@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import AuthGate from "@/components/AuthGate"
 import PoolCard from "@/components/PoolCard"
 import JoinPoolModal from "@/components/JoinPoolModal"
+import TransactionItem from "@/components/TransactionItem"
 
 export default function DashboardPage() {
   const { user } = usePrivy()
@@ -281,49 +282,7 @@ export default function DashboardPage() {
                 ) : transactions.length > 0 ? (
                   <div className="space-y-4">
                     {transactions.map((tx) => (
-                      <motion.div
-                        key={tx.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-4 rounded-md border border-border p-3"
-                      >
-                        <div
-                          className={`rounded-full p-2 ${
-                            tx.type === "contribution"
-                              ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30"
-                              : tx.type === "payout"
-                                ? "bg-green-100 text-green-600 dark:bg-green-900/30"
-                                : "bg-blue-100 text-blue-600 dark:bg-blue-900/30"
-                          }`}
-                        >
-                          {tx.type === "contribution" ? (
-                            <CreditCard className="h-5 w-5" />
-                          ) : tx.type === "payout" ? (
-                            <Wallet className="h-5 w-5" />
-                          ) : (
-                            <RefreshCw className="h-5 w-5" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium capitalize">{tx.type}</p>
-                          <p className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</p>
-                        </div>
-                        <div className="ml-auto text-right">
-                          <p
-                            className={`font-medium ${
-                              tx.type === "contribution"
-                                ? "text-purple-600 dark:text-purple-400"
-                                : tx.type === "payout"
-                                  ? "text-green-600 dark:text-green-400"
-                                  : "text-blue-600 dark:text-blue-400"
-                            }`}
-                          >
-                            {tx.type === "contribution" ? "-" : "+"}
-                            {formatCurrency(tx.amount, tx.tokenSymbol)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{tx.status}</p>
-                        </div>
-                      </motion.div>
+                      <TransactionItem key={tx.id} transaction={tx} showPoolInfo />
                     ))}
                   </div>
                 ) : (

@@ -7,13 +7,13 @@ import type { Pool } from "@/lib/solana"
 import { useTokenBalances } from "@/lib/solana"
 import { formatCurrency } from "@/lib/utils"
 import { getFeeBreakdown } from "@/lib/fees"
-import { ArrowRight, Check, CreditCard, Loader2, X } from "lucide-react"
+import { ArrowRight, CreditCard, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import FeeBreakdown from "@/components/FeeBreakdown"
+import AnimatedAlert from "@/components/AnimatedAlert"
 
 interface ContributionPanelProps {
   pool: Pool
@@ -181,21 +181,9 @@ export default function ContributionPanel({ pool, onSuccess }: ContributionPanel
           )}
         </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <X className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        {error && <AnimatedAlert type="error" message={error} onDismiss={() => setError(null)} />}
 
-        {success && (
-          <Alert className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-300">
-            <Check className="h-4 w-4" />
-            <AlertTitle>Success</AlertTitle>
-            <AlertDescription>{success}</AlertDescription>
-          </Alert>
-        )}
+        {success && <AnimatedAlert type="success" message={success} onDismiss={() => setSuccess(null)} />}
       </CardContent>
       <CardFooter>
         <Button

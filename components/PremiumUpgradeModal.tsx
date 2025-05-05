@@ -13,14 +13,15 @@ import {
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MotionModal } from "./MotionWrapper"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AnimatePresence, motion } from "framer-motion"
 import {
-  PREMIUM_USER_FEATURES,
-  PREMIUM_POOL_FEATURES,
   USER_PREMIUM_MONTHLY_PRICE,
   POOL_PREMIUM_MONTHLY_PRICE,
   upgradeUserToPremium,
   upgradePoolToPremium,
 } from "@/lib/subscription"
+import { getUpgradeableFeatures, FEATURE_DESCRIPTIONS } from "@/lib/premium"
 
 interface PremiumUpgradeModalProps {
   isOpen: boolean
@@ -28,6 +29,7 @@ interface PremiumUpgradeModalProps {
   userAddress?: string
   poolId?: string
   onSuccess?: () => void
+  defaultTab?: "user" | "pool"
 }
 
 /**
@@ -39,10 +41,16 @@ export default function PremiumUpgradeModal({
   userAddress,
   poolId,
   onSuccess,
+  defaultTab = "user",
 }: PremiumUpgradeModalProps) {
-  const [activeTab, setActiveTab] = useState<"user" | "pool">("user")
+  const [activeTab, setActiveTab] = useState<"user" | "pool">(poolId ? defaultTab : "user")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  // Get features that would become available with upgrade
+  const userUpgradeFeatures = getUpgradeableFeatures("user", userAddress, poolId)
+  const poolUpgradeFeatures = poolId ? getUpgradeableFeatures("pool", userAddress, poolId) : []
 
   const handleUpgrade = async () => {
     if (!userAddress) {
@@ -63,8 +71,13 @@ export default function PremiumUpgradeModal({
       }
 
       if (success) {
-        if (onSuccess) onSuccess()
-        onClose()
+        setSuccess(`Successfully upgraded to ${activeTab === "user" ? "Premium User" : "Premium Pool"}!`)
+
+        // Auto-close after success
+        setTimeout(() => {
+          if (onSuccess) onSuccess()
+          onClose()
+        }, 2000)
       } else {
         setError("Upgrade failed. Please try again.")
       }
@@ -112,12 +125,17 @@ export default function PremiumUpgradeModal({
                   </div>
                 </div>
                 <ul className="space-y-2">
-                  {PREMIUM_USER_FEATURES.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm text-purple-800 dark:text-purple-300">
+                  {userUpgradeFeatures.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm text-purple-800 dark:text-purple-300">
                       <Check className="h-4 w-4 shrink-0 text-purple-600 dark:text-purple-400" />
-                      <span>{feature}</span>
+                      <span>{FEATURE_DESCRIPTIONS[feature]}</span>
                     </li>
                   ))}
+                  {userUpgradeFeatures.length === 0 && (
+                    <li className="text-sm text-purple-800 dark:text-purple-300">
+                      You already have access to all premium user features!
+                    </li>
+                  )}
                 </ul>
               </div>
             </TabsContent>
@@ -131,25 +149,55 @@ export default function PremiumUpgradeModal({
                   </div>
                 </div>
                 <ul className="space-y-2">
-                  {PREMIUM_POOL_FEATURES.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-300">
+                  {poolUpgradeFeatures.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-300">
                       <Check className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                      <span>{feature}</span>
+                      <span>{FEATURE_DESCRIPTIONS[feature]}</span>
                     </li>
                   ))}
+                  {poolUpgradeFeatures.length === 0 && (
+                    <li className="text-sm text-amber-800 dark:text-amber-300">
+                      This pool already has access to all premium pool features!
+                    </li>
+                  )}
                 </ul>
               </div>
             </TabsContent>
           </Tabs>
 
-          {error && (
-            <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-300">
-              <div className="flex items-center gap-2">
-                <X className="h-4 w-4" />
-                <p>{error}</p>
-              </div>
-            </div>
-          )}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="mt-4"
+              >
+                <Alert variant="destructive">
+                  <X className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+
+            {success && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="mt-4"
+              >
+                <Alert className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                  <Check className="h-4 w-4" />
+                  <AlertTitle>Success</AlertTitle>
+                  <AlertDescription>{success}</AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <DialogFooter className="mt-6">
             <Button variant="outline" onClick={onClose} disabled={isLoading}>
@@ -157,7 +205,11 @@ export default function PremiumUpgradeModal({
             </Button>
             <Button
               onClick={handleUpgrade}
-              disabled={isLoading}
+              disabled={
+                isLoading ||
+                (activeTab === "user" && userUpgradeFeatures.length === 0) ||
+                (activeTab === "pool" && poolUpgradeFeatures.length === 0)
+              }
               className={activeTab === "user" ? "bg-purple-600 hover:bg-purple-700" : "bg-amber-600 hover:bg-amber-700"}
             >
               {isLoading ? (

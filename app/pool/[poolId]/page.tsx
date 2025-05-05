@@ -22,8 +22,6 @@ import {
   Vote,
   X,
   Check,
-  Wallet,
-  RefreshCw,
   Crown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -41,6 +39,8 @@ import PremiumBadge from "@/components/PremiumBadge"
 import LockedFeatureBanner from "@/components/LockedFeatureBanner"
 import PremiumUpgradeModal from "@/components/PremiumUpgradeModal"
 import { copyToClipboard } from "@/lib/utils"
+import TransactionItem from "@/components/TransactionItem"
+import PoolSettings from "@/components/PoolSettings"
 
 export default function PoolDetailsPage({ params }: { params: { poolId: string } }) {
   const { user } = usePrivy()
@@ -243,10 +243,19 @@ export default function PoolDetailsPage({ params }: { params: { poolId: string }
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="transactions">Transactions</TabsTrigger>
-                <TabsTrigger value="votes">Votes</TabsTrigger>
+              <TabsList className="flex w-full flex-wrap sm:flex-nowrap">
+                <TabsTrigger value="overview" className="flex-1 text-xs sm:text-sm">
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="transactions" className="flex-1 text-xs sm:text-sm">
+                  Transactions
+                </TabsTrigger>
+                <TabsTrigger value="votes" className="flex-1 text-xs sm:text-sm">
+                  Votes
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex-1 text-xs sm:text-sm">
+                  Settings
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview">
@@ -401,49 +410,7 @@ export default function PoolDetailsPage({ params }: { params: { poolId: string }
                     ) : poolTransactions.length > 0 ? (
                       <div className="space-y-4">
                         {poolTransactions.map((tx) => (
-                          <motion.div
-                            key={tx.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="flex items-center gap-4 rounded-md border border-border p-3"
-                          >
-                            <div
-                              className={`rounded-full p-2 ${
-                                tx.type === "contribution"
-                                  ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30"
-                                  : tx.type === "payout"
-                                    ? "bg-green-100 text-green-600 dark:bg-green-900/30"
-                                    : "bg-blue-100 text-blue-600 dark:bg-blue-900/30"
-                              }`}
-                            >
-                              {tx.type === "contribution" ? (
-                                <CreditCard className="h-5 w-5" />
-                              ) : tx.type === "payout" ? (
-                                <Wallet className="h-5 w-5" />
-                              ) : (
-                                <RefreshCw className="h-5 w-5" />
-                              )}
-                            </div>
-                            <div>
-                              <p className="font-medium capitalize">{tx.type}</p>
-                              <p className="text-sm text-muted-foreground">{formatDate(tx.timestamp)}</p>
-                            </div>
-                            <div className="ml-auto text-right">
-                              <p
-                                className={`font-medium ${
-                                  tx.type === "contribution"
-                                    ? "text-purple-600 dark:text-purple-400"
-                                    : tx.type === "payout"
-                                      ? "text-green-600 dark:text-green-400"
-                                      : "text-blue-600 dark:text-blue-400"
-                                }`}
-                              >
-                                {tx.type === "contribution" ? "-" : "+"}
-                                {formatCurrency(tx.amount, tx.tokenSymbol)}
-                              </p>
-                              <p className="text-xs text-muted-foreground">{tx.status}</p>
-                            </div>
-                          </motion.div>
+                          <TransactionItem key={tx.id} transaction={tx} />
                         ))}
                       </div>
                     ) : (
@@ -532,6 +499,14 @@ export default function PoolDetailsPage({ params }: { params: { poolId: string }
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="settings">
+                <PoolSettings
+                  pool={pool}
+                  onSuccess={handleRefresh}
+                  onOpenPremiumModal={() => setShowPremiumModal(true)}
+                />
               </TabsContent>
             </Tabs>
           </div>

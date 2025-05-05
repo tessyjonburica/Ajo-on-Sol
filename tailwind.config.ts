@@ -116,6 +116,15 @@ const config: Config = {
         "pulse-gentle": "pulse-gentle 2s infinite",
         float: "float 6s ease-in-out infinite",
       },
+      utilities: {
+        ".scrollbar-hide": {
+          "-ms-overflow-style": "none",
+          "scrollbar-width": "none",
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+        },
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

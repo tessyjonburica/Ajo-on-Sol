@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { usePrivy } from "@/lib/privy"
 import { voteOnProposal, type Proposal } from "@/lib/api"
 import { formatDate, formatAddress } from "@/lib/utils"
@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 interface VotePanelProps {
   proposal: Proposal
@@ -25,8 +26,33 @@ export default function VotePanel({ proposal, onVoteSuccess }: VotePanelProps) {
   const [isVoting, setIsVoting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [showVoters, setShowVoters] = useState(false)
+
+  // Mock voters data - in a real app, this would come from the API
+  const voters = [
+    { address: "GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL", name: "User 1", vote: "Approve", avatar: "U" },
+    { address: "5YNmS1R9nNSCDzb5a7mMJ1dwK9uHeAAF4CertuqDcKij", name: "User 2", vote: "Approve", avatar: "A" },
+    { address: "Dv2c4dvAL4V7coZEbS6fMrSyMDMzRxKyuQGkzzKZ42Wu", name: "User 3", vote: "Reject", avatar: "B" },
+  ]
 
   const totalVotes = Object.values(proposal.votes).reduce((a, b) => a + b, 0)
+
+  // Auto-dismiss success/error messages
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        setSuccess(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [success, error])
 
   const handleVote = async () => {
     if (!selectedOption) {
@@ -108,7 +134,12 @@ export default function VotePanel({ proposal, onVoteSuccess }: VotePanelProps) {
         </div>
 
         <div className="rounded-md border border-border p-4">
-          <h3 className="mb-3 text-sm font-medium">Current Results</h3>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-medium">Current Results</h3>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setShowVoters(!showVoters)}>
+              {showVoters ? "Hide Voters" : "Show Voters"}
+            </Button>
+          </div>
           <div className="space-y-3">
             {proposal.options.map((option) => (
               <div key={option} className="space-y-1">
@@ -123,6 +154,37 @@ export default function VotePanel({ proposal, onVoteSuccess }: VotePanelProps) {
               </div>
             ))}
           </div>
+
+          {showVoters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mt-4 border-t border-border pt-4"
+            >
+              <h4 className="mb-2 text-sm font-medium">Recent Voters</h4>
+              <div className="space-y-2">
+                {voters.map((voter) => (
+                  <div
+                    key={voter.address}
+                    className="flex items-center justify-between rounded-md border border-border p-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-xs">{voter.avatar}</AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs">{formatAddress(voter.address)}</span>
+                    </div>
+                    <span
+                      className={`text-xs font-medium ${voter.vote === "Approve" ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {voter.vote}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {isActive && (
@@ -141,21 +203,37 @@ export default function VotePanel({ proposal, onVoteSuccess }: VotePanelProps) {
           </div>
         )}
 
-        {error && (
-          <Alert variant="destructive">
-            <X className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Alert variant="destructive">
+                <X className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
 
-        {success && (
-          <Alert className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-300">
-            <Check className="h-4 w-4" />
-            <AlertTitle>Success</AlertTitle>
-            <AlertDescription>{success}</AlertDescription>
-          </Alert>
-        )}
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Alert className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-300">
+                <Check className="h-4 w-4" />
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
 
       {isActive && (
