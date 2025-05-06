@@ -1,0 +1,10 @@
+{
+  "name": "ajo-backend-integration",
+  "version": "1.0.0",
+  "description": "Integration package for Ajo smart contract",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.28.0",
+    "@solana/web3.js": "^1.78.0",
+    "@solana/spl-token": "^0.3.8"
+  }
+}
