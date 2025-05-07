@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-import { usePrivy } from "@/lib/privy"
+import { usePrivyWithSupabase } from "@/lib/privy/hooks"
 import { usePools, useTransactions, formatWalletAddress } from "@/lib/solana"
 import { formatDate, formatCurrency } from "@/lib/utils"
 import { ArrowUpRight, Clock, CreditCard, Loader2, Plus, RefreshCw, Search, UserPlus, Wallet } from "lucide-react"
@@ -16,11 +16,12 @@ import AuthGate from "@/components/AuthGate"
 import PoolCard from "@/components/PoolCard"
 import JoinPoolModal from "@/components/JoinPoolModal"
 import TransactionItem from "@/components/TransactionItem"
+import { supabase } from "@/lib/supabase/client"
 
 export default function DashboardPage() {
-  const { user } = usePrivy()
-  const { pools, isLoading: isLoadingPools, error: poolsError } = usePools(user?.wallet.address)
-  const { transactions, isLoading: isLoadingTransactions } = useTransactions(user?.wallet.address)
+  const { privyUser, supabaseUser, loading: userLoading } = usePrivyWithSupabase()
+  const { pools, isLoading: isLoadingPools, error: poolsError } = usePools(privyUser?.wallet?.address)
+  const { transactions, isLoading: isLoadingTransactions } = useTransactions(privyUser?.wallet?.address)
 
   const [searchQuery, setSearchQuery] = useState("")
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
@@ -34,9 +35,17 @@ export default function DashboardPage() {
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
-    // Simulate refresh delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsRefreshing(false)
+
+    // Force refresh data by invalidating Supabase cache
+    await Promise.all([
+      supabase.from("pools").select("count").throwOnError(),
+      supabase.from("contributions").select("count").throwOnError(),
+      supabase.from("payouts").select("count").throwOnError(),
+    ])
+
+    setTimeout(() => {
+      setIsRefreshing(false)
+    }, 1000)
   }
 
   return (
@@ -79,7 +88,7 @@ export default function DashboardPage() {
                 <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {isLoadingPools ? (
+                {isLoadingPools || userLoading ? (
                   <Skeleton className="h-7 w-16" />
                 ) : (
                   <div className="text-2xl font-bold">{pools.filter((p) => p.status === "active").length}</div>
@@ -99,7 +108,7 @@ export default function DashboardPage() {
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {isLoadingPools ? (
+                {isLoadingPools || userLoading ? (
                   <Skeleton className="h-7 w-24" />
                 ) : (
                   <div className="text-2xl font-bold">
@@ -124,7 +133,7 @@ export default function DashboardPage() {
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                {isLoadingPools ? (
+                {isLoadingPools || userLoading ? (
                   <Skeleton className="h-7 w-20" />
                 ) : pools.length > 0 ? (
                   <div className="text-2xl font-bold">
@@ -154,12 +163,12 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  {user?.wallet.address ? (
+                  {privyUser?.wallet?.address ? (
                     <>
-                      {formatWalletAddress(user.wallet.address)}
+                      {formatWalletAddress(privyUser.wallet.address)}
                       <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" asChild>
                         <a
-                          href={`https://solscan.io/account/${user.wallet.address}`}
+                          href={`https://solscan.io/account/${privyUser.wallet.address}`}
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -194,7 +203,7 @@ export default function DashboardPage() {
               />
             </div>
 
-            {isLoadingPools ? (
+            {isLoadingPools || userLoading ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Card key={i} className="overflow-hidden">
@@ -264,7 +273,7 @@ export default function DashboardPage() {
                 <CardDescription>View your recent contributions and payouts</CardDescription>
               </CardHeader>
               <CardContent>
-                {isLoadingTransactions ? (
+                {isLoadingTransactions || userLoading ? (
                   <div className="space-y-4">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <div key={i} className="flex items-center gap-4">
@@ -301,7 +310,6 @@ export default function DashboardPage() {
           </TabsContent>
         </Tabs>
       </div>
-      
     </AuthGate>
   )
 }

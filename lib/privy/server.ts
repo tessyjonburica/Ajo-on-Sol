@@ -1,49 +1,55 @@
-import type { NextRequest } from "next/server"
 import { cookies } from "next/headers"
-import { createServerSupabaseClient } from "../supabase/client"
+import { PrivyClient } from "@privy-io/server-auth"
 
-// Helper function to get the Privy user from the request
-export async function getPrivyUser(request: NextRequest) {
+// Initialize Privy client
+const privy = new PrivyClient(process.env.PRIVY_APP_ID!, process.env.PRIVY_APP_SECRET!)
+
+// Get the authenticated Privy user from the request
+export async function getPrivyUser(request: Request) {
   try {
-    // Get the Privy token from the cookie
-    const cookieStore = cookies()
-    const privyToken = cookieStore.get("privy-token")?.value
+    // Get the authorization header or cookie
+    const authHeader = request.headers.get("authorization")
+    const cookieHeader = request.headers.get("cookie")
 
-    if (!privyToken) {
+    let token = ""
+
+    // Try to get token from Authorization header
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7)
+    }
+    // Try to get token from cookies
+    else if (cookieHeader) {
+      const cookieObj = parseCookies(cookieHeader)
+      token = cookieObj["privy-token"] || ""
+    }
+
+    if (!token) {
+      // Try to get token from Next.js cookies
+      const cookieStore = cookies()
+      token = cookieStore.get("privy-token")?.value || ""
+    }
+
+    if (!token) {
       return null
     }
 
-    // Verify the token with Privy API
-    // In a real implementation, you would use Privy's server SDK to verify the token
-    // For this example, we'll assume the token is valid and extract the user ID
-
-    // Extract the user ID from the token (simplified for example)
-    const tokenParts = privyToken.split(".")
-    if (tokenParts.length !== 3) {
-      return null
-    }
-
-    const payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString())
-    const privyId = payload.sub
-
-    if (!privyId) {
-      return null
-    }
-
-    // Get the user from Supabase
-    const supabase = createServerSupabaseClient()
-    const { data: user, error } = await supabase.from("users").select("*").eq("privy_id", privyId).single()
-
-    if (error || !user) {
-      return null
-    }
-
-    return {
-      id: privyId,
-      supabaseUser: user,
-    }
+    // Verify the token and get the user
+    const { user } = await privy.verifyAuthToken(token)
+    return user
   } catch (error) {
     console.error("Error getting Privy user:", error)
     return null
   }
+}
+
+// Helper function to parse cookies from header
+function parseCookies(cookieHeader: string) {
+  return cookieHeader.split(";").reduce(
+    (cookies, cookie) => {
+      const [name, value] = cookie.trim().split("=")
+      cookies[name] = value
+      return cookies
+    },
+    {} as Record<string, string>,
+  )
 }

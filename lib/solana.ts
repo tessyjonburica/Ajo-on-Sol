@@ -1,7 +1,8 @@
 "use client"
 
-// Mock Solana wallet and SPL token utilities
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import { supabase } from "./supabase/client"
+import { usePrivy } from "@privy-io/react-auth"
 
 // Types
 export type TokenBalance = {
@@ -34,6 +35,7 @@ export type Pool = {
   yieldEnabled: boolean
   currentYield?: number
   status: "active" | "pending" | "completed"
+  slug?: string
 }
 
 export type Transaction = {
@@ -50,191 +52,133 @@ export type Transaction = {
   signature: string
 }
 
-// Mock token balances
-const MOCK_TOKENS: TokenBalance[] = [
-  {
-    mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    symbol: "USDC",
-    name: "USD Coin",
-    amount: 1000000000, // 1000 USDC in raw units
-    decimals: 6,
-    uiAmount: 1000,
-    logo: "/placeholder.svg?height=24&width=24",
-  },
-  {
-    mint: "So11111111111111111111111111111111111111112",
-    symbol: "SOL",
-    name: "Solana",
-    amount: 5000000000, // 5 SOL in raw units
-    decimals: 9,
-    uiAmount: 5,
-    logo: "/placeholder.svg?height=24&width=24",
-  },
-]
-
-// Mock pools
-export const MOCK_POOLS: Pool[] = [
-  {
-    id: "pool_1",
-    name: "Lagos Traders Group",
-    description: "Weekly savings pool for Lagos market traders",
-    creator: "GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL",
-    members: ["GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL", "..."],
-    contributionAmount: 50,
-    contributionToken: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    contributionTokenSymbol: "USDC",
-    frequency: "weekly",
-    totalMembers: 10,
-    currentMembers: 8,
-    startDate: new Date("2023-12-01"),
-    endDate: new Date("2024-02-28"),
-    nextPayoutDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-    nextPayoutMember: "GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL",
-    totalContributed: 1600,
-    yieldEnabled: true,
-    currentYield: 2.5,
-    status: "active",
-  },
-  {
-    id: "pool_2",
-    name: "Abuja Family Circle",
-    description: "Monthly savings for extended family members",
-    creator: "Dv2c4dvAL4V7coZEbS6fMrSyMDMzRxKyuQGkzzKZ42Wu",
-    members: ["GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL", "..."],
-    contributionAmount: 100,
-    contributionToken: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    contributionTokenSymbol: "USDC",
-    frequency: "monthly",
-    totalMembers: 12,
-    currentMembers: 12,
-    startDate: new Date("2023-11-15"),
-    endDate: new Date("2024-11-15"),
-    nextPayoutDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days from now
-    nextPayoutMember: "Dv2c4dvAL4V7coZEbS6fMrSyMDMzRxKyuQGkzzKZ42Wu",
-    totalContributed: 2400,
-    yieldEnabled: false,
-    status: "active",
-  },
-  {
-    id: "pool_3",
-    name: "Tech Startup Fund",
-    description: "Biweekly pool for tech entrepreneurs",
-    creator: "GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL",
-    members: ["GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL", "..."],
-    contributionAmount: 0.5,
-    contributionToken: "So11111111111111111111111111111111111111112",
-    contributionTokenSymbol: "SOL",
-    frequency: "biweekly",
-    totalMembers: 6,
-    currentMembers: 4,
-    startDate: new Date("2024-01-01"),
-    endDate: new Date("2024-06-30"),
-    nextPayoutDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000), // 8 days from now
-    nextPayoutMember: "5YNmS1R9nNSCDzb5a7mMJ1dwK9uHeAAF4CertuqDcKij",
-    totalContributed: 8,
-    yieldEnabled: true,
-    currentYield: 4.2,
-    status: "active",
-  },
-]
-
-// Mock transactions
-export const MOCK_TRANSACTIONS: Transaction[] = [
-  {
-    id: "tx_1",
-    poolId: "pool_1",
-    type: "contribution",
-    amount: 50,
-    token: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    tokenSymbol: "USDC",
-    sender: "GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL",
-    recipient: "pool_1",
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    status: "confirmed",
-    signature: "5UJpxLXKQmwxQsLo9JyktV5CZ6yXMPsJN6RYbLaEcLT3TxzPuNgRuTQmQTE9k7n4aNfFm1Cv",
-  },
-  {
-    id: "tx_2",
-    poolId: "pool_2",
-    type: "contribution",
-    amount: 100,
-    token: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    tokenSymbol: "USDC",
-    sender: "GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL",
-    recipient: "pool_2",
-    timestamp: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
-    status: "confirmed",
-    signature: "2UJpxLXKQmwxQsLo9JyktV5CZ6yXMPsJN6RYbLaEcLT3TxzPuNgRuTQmQTE9k7n4aNfFm1Cv",
-  },
-  {
-    id: "tx_3",
-    poolId: "pool_1",
-    type: "payout",
-    amount: 400,
-    token: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    tokenSymbol: "USDC",
-    sender: "pool_1",
-    recipient: "5YNmS1R9nNSCDzb5a7mMJ1dwK9uHeAAF4CertuqDcKij",
-    timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-    status: "confirmed",
-    signature: "3UJpxLXKQmwxQsLo9JyktV5CZ6yXMPsJN6RYbLaEcLT3TxzPuNgRuTQmQTE9k7n4aNfFm1Cv",
-  },
-]
-
-// Hook to get token balances
+// Hook to get token balances from blockchain
 export const useTokenBalances = () => {
   const [balances, setBalances] = useState<TokenBalance[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { user } = usePrivy()
 
   useEffect(() => {
     const fetchBalances = async () => {
+      if (!user?.wallet?.address) {
+        setBalances([])
+        setIsLoading(false)
+        return
+      }
+
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        setBalances(MOCK_TOKENS)
+        setIsLoading(true)
+        // Here you would integrate with a real Solana wallet provider
+        // For now, we'll return some basic tokens that would be available
+        const basicTokens: TokenBalance[] = [
+          {
+            mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            symbol: "USDC",
+            name: "USD Coin",
+            amount: 0,
+            decimals: 6,
+            uiAmount: 0,
+            logo: "/placeholder.svg?height=24&width=24",
+          },
+          {
+            mint: "So11111111111111111111111111111111111111112",
+            symbol: "SOL",
+            name: "Solana",
+            amount: 0,
+            decimals: 9,
+            uiAmount: 0,
+            logo: "/placeholder.svg?height=24&width=24",
+          },
+        ]
+        setBalances(basicTokens)
         setIsLoading(false)
       } catch (err) {
+        console.error("Error fetching token balances:", err)
         setError("Failed to fetch token balances")
         setIsLoading(false)
       }
     }
 
     fetchBalances()
-  }, [])
+  }, [user?.wallet?.address])
 
   return { balances, isLoading, error }
 }
 
-// Hook to get user pools
+// Hook to get user pools from Supabase
 export const usePools = (walletAddress?: string) => {
   const [pools, setPools] = useState<Pool[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { user } = usePrivy()
 
   useEffect(() => {
     const fetchPools = async () => {
-      if (!walletAddress) {
+      if (!walletAddress || !user) {
         setPools([])
         setIsLoading(false)
         return
       }
 
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1800))
-        // Filter pools where user is a member
-        const userPools = MOCK_POOLS.filter((pool) => pool.members.includes(walletAddress))
-        setPools(userPools)
+        setIsLoading(true)
+
+        // Fetch pools from the API
+        const response = await fetch("/api/pools")
+        if (!response.ok) {
+          throw new Error("Failed to fetch pools")
+        }
+
+        const data = await response.json()
+
+        // Transform the data to match our Pool type
+        const transformedPools: Pool[] = data.pools.map((pool: any) => ({
+          id: pool.id,
+          name: pool.name,
+          description: pool.description,
+          creator: pool.creator?.wallet_address || "",
+          members: pool.pool_members?.map((member: any) => member.user?.wallet_address) || [],
+          contributionAmount: pool.contribution_amount,
+          contributionToken: pool.contribution_token,
+          contributionTokenSymbol: pool.contribution_token_symbol,
+          frequency: pool.frequency,
+          totalMembers: pool.total_members,
+          currentMembers: pool.current_members,
+          startDate: new Date(pool.start_date),
+          endDate: new Date(pool.end_date),
+          nextPayoutDate: new Date(pool.next_payout_date),
+          nextPayoutMember: pool.next_payout_member?.wallet_address || "",
+          totalContributed: pool.total_contributed,
+          yieldEnabled: pool.yield_enabled,
+          currentYield: pool.current_yield,
+          status: pool.status,
+          slug: pool.slug,
+        }))
+
+        setPools(transformedPools)
         setIsLoading(false)
       } catch (err) {
+        console.error("Error fetching pools:", err)
         setError("Failed to fetch pools")
         setIsLoading(false)
       }
     }
 
     fetchPools()
-  }, [walletAddress])
+
+    // Set up real-time subscription
+    const poolsSubscription = supabase
+      .channel("pools-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "pools" }, () => {
+        fetchPools()
+      })
+      .subscribe()
+
+    return () => {
+      poolsSubscription.unsubscribe()
+    }
+  }, [walletAddress, user])
 
   return { pools, isLoading, error }
 }
@@ -244,23 +188,74 @@ export const usePoolDetails = (poolId: string) => {
   const [pool, setPool] = useState<Pool | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { user } = usePrivy()
 
   useEffect(() => {
     const fetchPoolDetails = async () => {
+      if (!poolId || !user) {
+        setPool(null)
+        setIsLoading(false)
+        return
+      }
+
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1200))
-        const foundPool = MOCK_POOLS.find((p) => p.id === poolId) || null
-        setPool(foundPool)
+        setIsLoading(true)
+
+        // Fetch pool details from the API
+        const response = await fetch(`/api/pools/${poolId}`)
+        if (!response.ok) {
+          throw new Error("Failed to fetch pool details")
+        }
+
+        const data = await response.json()
+
+        // Transform the data to match our Pool type
+        const transformedPool: Pool = {
+          id: data.pool.id,
+          name: data.pool.name,
+          description: data.pool.description,
+          creator: data.pool.creator?.wallet_address || "",
+          members: data.pool.pool_members?.map((member: any) => member.user?.wallet_address) || [],
+          contributionAmount: data.pool.contribution_amount,
+          contributionToken: data.pool.contribution_token,
+          contributionTokenSymbol: data.pool.contribution_token_symbol,
+          frequency: data.pool.frequency,
+          totalMembers: data.pool.total_members,
+          currentMembers: data.pool.current_members,
+          startDate: new Date(data.pool.start_date),
+          endDate: new Date(data.pool.end_date),
+          nextPayoutDate: new Date(data.pool.next_payout_date),
+          nextPayoutMember: data.pool.next_payout_member?.wallet_address || "",
+          totalContributed: data.pool.total_contributed,
+          yieldEnabled: data.pool.yield_enabled,
+          currentYield: data.pool.current_yield,
+          status: data.pool.status,
+          slug: data.pool.slug,
+        }
+
+        setPool(transformedPool)
         setIsLoading(false)
       } catch (err) {
+        console.error("Error fetching pool details:", err)
         setError("Failed to fetch pool details")
         setIsLoading(false)
       }
     }
 
     fetchPoolDetails()
-  }, [poolId])
+
+    // Set up real-time subscription
+    const poolSubscription = supabase
+      .channel(`pool-${poolId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "pools", filter: `id=eq.${poolId}` }, () => {
+        fetchPoolDetails()
+      })
+      .subscribe()
+
+    return () => {
+      poolSubscription.unsubscribe()
+    }
+  }, [poolId, user])
 
   return { pool, isLoading, error }
 }
@@ -270,32 +265,125 @@ export const useTransactions = (walletAddress?: string) => {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { user } = usePrivy()
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (!walletAddress) {
+      if (!walletAddress || !user) {
         setTransactions([])
         setIsLoading(false)
         return
       }
 
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        // Filter transactions where user is sender or recipient
-        const userTransactions = MOCK_TRANSACTIONS.filter(
-          (tx) => tx.sender === walletAddress || tx.recipient === walletAddress,
-        )
-        setTransactions(userTransactions)
+        setIsLoading(true)
+
+        // Fetch both contributions and payouts
+        const [contributionsRes, payoutsRes] = await Promise.all([
+          supabase
+            .from("contributions")
+            .select(`
+              id,
+              pool_id,
+              user_id,
+              amount,
+              token,
+              token_symbol,
+              transaction_signature,
+              status,
+              created_at,
+              users!contributions_user_id_fkey(wallet_address),
+              pools(id, name)
+            `)
+            .eq("users.wallet_address", walletAddress)
+            .order("created_at", { ascending: false }),
+
+          supabase
+            .from("payouts")
+            .select(`
+              id,
+              pool_id,
+              recipient_id,
+              amount,
+              token,
+              token_symbol,
+              transaction_signature,
+              status,
+              payout_date,
+              users!payouts_recipient_id_fkey(wallet_address),
+              pools(id, name)
+            `)
+            .eq("users.wallet_address", walletAddress)
+            .order("payout_date", { ascending: false }),
+        ])
+
+        if (contributionsRes.error) throw contributionsRes.error
+        if (payoutsRes.error) throw payoutsRes.error
+
+        // Transform contributions to Transaction type
+        const contributionTxs: Transaction[] = (contributionsRes.data || []).map((c: any) => ({
+          id: c.id,
+          poolId: c.pool_id,
+          type: "contribution",
+          amount: c.amount,
+          token: c.token,
+          tokenSymbol: c.token_symbol,
+          sender: c.users?.wallet_address || "",
+          recipient: c.pool_id,
+          timestamp: new Date(c.created_at),
+          status: c.status,
+          signature: c.transaction_signature,
+        }))
+
+        // Transform payouts to Transaction type
+        const payoutTxs: Transaction[] = (payoutsRes.data || []).map((p: any) => ({
+          id: p.id,
+          poolId: p.pool_id,
+          type: "payout",
+          amount: p.amount,
+          token: p.token,
+          tokenSymbol: p.token_symbol,
+          sender: p.pool_id,
+          recipient: p.users?.wallet_address || "",
+          timestamp: new Date(p.payout_date),
+          status: p.status,
+          signature: p.transaction_signature,
+        }))
+
+        // Combine and sort by timestamp
+        const allTxs = [...contributionTxs, ...payoutTxs].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+
+        setTransactions(allTxs)
         setIsLoading(false)
       } catch (err) {
+        console.error("Error fetching transactions:", err)
         setError("Failed to fetch transactions")
         setIsLoading(false)
       }
     }
 
     fetchTransactions()
-  }, [walletAddress])
+
+    // Set up real-time subscriptions
+    const contributionsSubscription = supabase
+      .channel("contributions-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contributions" }, () => {
+        fetchTransactions()
+      })
+      .subscribe()
+
+    const payoutsSubscription = supabase
+      .channel("payouts-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "payouts" }, () => {
+        fetchTransactions()
+      })
+      .subscribe()
+
+    return () => {
+      contributionsSubscription.unsubscribe()
+      payoutsSubscription.unsubscribe()
+    }
+  }, [walletAddress, user])
 
   return { transactions, isLoading, error }
 }

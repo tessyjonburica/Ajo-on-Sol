@@ -30,6 +30,9 @@ export async function syncUserWithSupabase(privyUser: any) {
     throw new Error("No Solana wallet address found for user")
   }
 
+  // Check if user already exists
+  const { data: existingUser } = await supabase.from("users").select("*").eq("privy_id", privyUser.id).single()
+
   // Upsert the user in Supabase
   const { data, error } = await supabase
     .from("users")
@@ -39,7 +42,7 @@ export async function syncUserWithSupabase(privyUser: any) {
       display_name: privyUser.name || null,
       email: privyUser.email?.address || null,
       avatar_url: privyUser.avatar || null,
-      is_premium: false, // Default to non-premium
+      is_premium: existingUser?.is_premium || false, // Preserve premium status if exists
       updated_at: new Date().toISOString(),
     })
     .select()
@@ -63,6 +66,37 @@ export async function getCurrentUser(privyId: string) {
     console.error("Error fetching user from Supabase:", error)
     return null
   }
+
+  return data
+}
+
+export async function updateUserProfile(
+  privyId: string,
+  updates: {
+    display_name?: string
+    avatar_url?: string
+    email?: string
+  },
+) {
+  const supabase = createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("users")
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("privy_id", privyId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating user profile:", error)
+    throw error
+  }
+
+  revalidatePath("/settings")
+  revalidatePath("/dashboard")
 
   return data
 }
