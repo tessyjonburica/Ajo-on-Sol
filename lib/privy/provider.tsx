@@ -4,7 +4,7 @@ import type React from "react"
 
 import { PrivyProvider as PrivyClientProvider } from "@privy-io/react-auth"
 import { useRouter } from "next/navigation"
-import { syncUserWithSupabase } from "./actions"
+import { syncUserWithSupabase } from "@/lib/privy/hooks";
 
 interface PrivyProviderProps {
   children: React.ReactNode
