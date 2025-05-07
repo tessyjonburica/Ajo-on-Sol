@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { getPoolById } from "@/lib/api"
 import { generateSlug } from "@/lib/slug"
-import PoolDetailsContent from "@/components/PoolDetailsContent"
+import PoolDetailsContent from '@/components/PoolDetailsContent';
 
 export default async function PoolDetailsPage({
   params,

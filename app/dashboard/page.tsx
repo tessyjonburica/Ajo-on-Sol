@@ -5,6 +5,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePrivyWithSupabase } from "@/lib/privy/hooks"
 import { usePools, useTransactions, formatWalletAddress } from "@/lib/solana"
+import { someFunction } from '@lib/privy/hooks';
 import { formatDate, formatCurrency } from "@/lib/utils"
 import { ArrowUpRight, Clock, CreditCard, Loader2, Plus, RefreshCw, Search, UserPlus, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
