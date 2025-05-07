@@ -1,7 +1,7 @@
 // Add the Solana contract integration
 import { type NextRequest, NextResponse } from "next/server"
 import { getPrivyUserByAuthToken } from "@/lib/privy/server"
-import { contributeToPool } from "@/lib/pools/actions"
+import { contributeToPool } from "@/lib/pools/action"
 import { verifyTransaction } from "@/lib/solana/client"
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
