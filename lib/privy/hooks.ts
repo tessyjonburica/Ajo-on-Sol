@@ -2,7 +2,7 @@
 
 import { usePrivy } from "@privy-io/react-auth"
 import { useEffect, useState } from "react"
-import { syncUserWithSupabase, getCurrentUser } from "./actions"
+import { syncUserWithSupabase, getCurrentUser } from "@lib/privy/hooks"
 import type { Tables } from "../supabase/schema"
 import { supabase } from "../supabase/client"
 
