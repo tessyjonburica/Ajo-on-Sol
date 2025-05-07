@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { usePrivyWithSupabase } from "@/lib/privy/hooks"
+import { someFunction } from '@lib/privy/hooks';
 import {
   Dialog,
   DialogContent,
