@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MotionModal } from "./MotionWrapper"
+import { MotionModal } from "@/components/MotionWrapper"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AnimatePresence, motion } from "framer-motion"
 import {

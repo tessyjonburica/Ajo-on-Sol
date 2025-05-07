@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import { MotionWrapper } from "./MotionWrapper"
+import {MotionWrapper} from "@/components/MotionWrapper";
 import { type PremiumFeature, FEATURE_DESCRIPTIONS } from "@/lib/premium"
 
 interface LockedFeatureBannerProps {

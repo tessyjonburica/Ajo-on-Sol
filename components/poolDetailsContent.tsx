@@ -15,7 +15,7 @@ import { usePrivy } from "@privy-io/react-auth"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { isPoolMember, isPoolAdmin } from "@/lib/roles"
 import { AnimatePresence } from "framer-motion"
-import MotionWrapper from "@/components/MotionWrapper"
+import {MotionWrapper} from "@/components/MotionWrapper";
 import { Separator } from "@/components/ui/separator"
 import { CalendarDays, Users, Wallet } from "lucide-react"
 import FeeBreakdown from "@/components/FeeBreakdown"

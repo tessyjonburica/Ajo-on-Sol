@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import type { ReactNode } from "react";
-import { motion, type MotionProps } from "framer-motion";
+import type { ReactNode } from "react"
+import { motion, type MotionProps } from "framer-motion"
 
 interface MotionWrapperProps extends MotionProps {
-  children: ReactNode;
-  className?: string;
-  delay?: number;
+  children: ReactNode
+  className?: string
+  delay?: number
 }
 
 /**
@@ -19,13 +19,13 @@ export function MotionWrapper({ children, className, delay = 0, ...motionProps }
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.4, delay, ease: "easeOut" },
     ...motionProps,
-  };
+  }
 
   return (
     <motion.div className={className} {...defaultAnimation}>
       {children}
     </motion.div>
-  );
+  )
 }
 
 /**
@@ -42,13 +42,13 @@ export function MotionListItem({
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.3, delay: index * 0.1, ease: "easeOut" },
     ...motionProps,
-  };
+  }
 
   return (
     <motion.div className={className} {...defaultAnimation}>
       {children}
     </motion.div>
-  );
+  )
 }
 
 /**
@@ -65,7 +65,7 @@ export function MotionPage({ children, className }: { children: ReactNode; class
     >
       {children}
     </motion.div>
-  );
+  )
 }
 
 /**
@@ -82,11 +82,5 @@ export function MotionModal({ children, className }: { children: ReactNode; clas
     >
       {children}
     </motion.div>
-  );
+  )
 }
-
-// Export all components as named exports
-export { MotionWrapper, MotionListItem, MotionPage, MotionModal };
-
-// Add a default export for MotionWrapper
-export default MotionWrapper;
