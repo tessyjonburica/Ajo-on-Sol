@@ -1,8 +1,8 @@
-import { createServerSupabaseClient } from "./supabase/client"
-import { notFound } from "next/navigation"
+import { createServerSupabaseClient } from "./supabase/client";
+import { notFound } from "next/navigation";
 
 export async function getPoolById(poolId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("pools")
@@ -16,11 +16,11 @@ export async function getPoolById(poolId: string) {
       )
     `)
     .eq("id", poolId)
-    .single()
+    .single();
 
   if (error || !data) {
-    console.error("Error fetching pool:", error)
-    return notFound()
+    console.error("Error fetching pool:", error);
+    return notFound();
   }
 
   // Transform the data to match our Pool type
@@ -59,11 +59,11 @@ export async function getPoolById(poolId: string) {
     currentYield: data.current_yield,
     status: data.status,
     slug: data.slug,
-  }
+  };
 }
 
 export async function getPoolProposals(poolId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("proposals")
@@ -74,30 +74,30 @@ export async function getPoolProposals(poolId: string) {
       votes(*)
     `)
     .eq("pool_id", poolId)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching proposals:", error)
-    throw error
+    console.error("Error fetching proposals:", error);
+    throw error;
   }
 
-  return data || []
+  return data || [];
 }
 
 export async function getUserVoteOnProposal(proposalId: string, userId: string) {
-  const supabase = createServerSupabaseClient()
+  const supabase = createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("votes")
     .select("*")
     .eq("proposal_id", proposalId)
     .eq("user_id", userId)
-    .maybeSingle()
+    .maybeSingle();
 
   if (error) {
-    console.error("Error fetching user vote:", error)
-    return null
+    console.error("Error fetching user vote:", error);
+    return null;
   }
 
-  return data
+  return data;
 }
