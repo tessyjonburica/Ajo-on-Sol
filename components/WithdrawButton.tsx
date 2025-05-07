@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePrivy } from "@/lib/privy"
-import { withdrawFromPool } from "@/lib/api"
+import { withdrawFromPool } from "@/lib/solana/ajo-contract"
 import type { Pool } from "@/lib/solana"
 import { formatCurrency } from "@/lib/utils"
 import { AlertTriangle, Check, Loader2, LogOut, X } from "lucide-react"

@@ -1,0 +1,713 @@
+{
+    "version": "0.1.0",
+    "name": "ajo",
+    "instructions": [
+      {
+        "name": "initialize",
+        "accounts": [
+          {
+            "name": "authority",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "ajoAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "contributionAmount",
+            "type": "u64"
+          },
+          {
+            "name": "contributionPeriod",
+            "type": "u64"
+          },
+          {
+            "name": "maxMembers",
+            "type": "u8"
+          },
+          {
+            "name": "startDate",
+            "type": "i64"
+          },
+          {
+            "name": "endDate",
+            "type": "i64"
+          }
+        ]
+      },
+      {
+        "name": "joinPool",
+        "accounts": [
+          {
+            "name": "member",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "ajoAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "memberAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": []
+      },
+      {
+        "name": "contribute",
+        "accounts": [
+          {
+            "name": "member",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "ajoAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "memberAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolVault",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      },
+      {
+        "name": "processPayout",
+        "accounts": [
+          {
+            "name": "authority",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "ajoAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "recipient",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "recipientAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolVault",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": []
+      },
+      {
+        "name": "createProposal",
+        "accounts": [
+          {
+            "name": "proposer",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "ajoAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "memberAccount",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "proposalAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "proposalType",
+            "type": {
+              "defined": "ProposalType"
+            }
+          },
+          {
+            "name": "executionData",
+            "type": {
+              "option": "bytes"
+            }
+          },
+          {
+            "name": "durationDays",
+            "type": "u8"
+          }
+        ]
+      },
+      {
+        "name": "voteOnProposal",
+        "accounts": [
+          {
+            "name": "voter",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "ajoAccount",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "memberAccount",
+            "isMut": false,
+            "isSigner": false
+          },
+          {
+            "name": "proposalAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "voteAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": [
+          {
+            "name": "vote",
+            "type": {
+              "defined": "VoteType"
+            }
+          }
+        ]
+      },
+      {
+        "name": "executeProposal",
+        "accounts": [
+          {
+            "name": "authority",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "ajoAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "proposalAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": []
+      },
+      {
+        "name": "emergencyWithdrawal",
+        "accounts": [
+          {
+            "name": "authority",
+            "isMut": true,
+            "isSigner": true
+          },
+          {
+            "name": "ajoAccount",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "recipient",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "poolVault",
+            "isMut": true,
+            "isSigner": false
+          },
+          {
+            "name": "systemProgram",
+            "isMut": false,
+            "isSigner": false
+          }
+        ],
+        "args": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    ],
+    "accounts": [
+      {
+        "name": "AjoAccount",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "authority",
+              "type": "publicKey"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "contributionAmount",
+              "type": "u64"
+            },
+            {
+              "name": "contributionPeriod",
+              "type": "u64"
+            },
+            {
+              "name": "currentMembers",
+              "type": "u8"
+            },
+            {
+              "name": "maxMembers",
+              "type": "u8"
+            },
+            {
+              "name": "totalContributed",
+              "type": "u64"
+            },
+            {
+              "name": "startDate",
+              "type": "i64"
+            },
+            {
+              "name": "endDate",
+              "type": "i64"
+            },
+            {
+              "name": "nextPayoutDate",
+              "type": "i64"
+            },
+            {
+              "name": "nextPayoutMember",
+              "type": "publicKey"
+            },
+            {
+              "name": "status",
+              "type": {
+                "defined": "PoolStatus"
+              }
+            },
+            {
+              "name": "yieldEnabled",
+              "type": "bool"
+            },
+            {
+              "name": "bump",
+              "type": "u8"
+            }
+          ]
+        }
+      },
+      {
+        "name": "MemberAccount",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "member",
+              "type": "publicKey"
+            },
+            {
+              "name": "ajoAccount",
+              "type": "publicKey"
+            },
+            {
+              "name": "position",
+              "type": "u8"
+            },
+            {
+              "name": "totalContributed",
+              "type": "u64"
+            },
+            {
+              "name": "hasReceivedPayout",
+              "type": "bool"
+            },
+            {
+              "name": "lastContributionDate",
+              "type": "i64"
+            },
+            {
+              "name": "status",
+              "type": {
+                "defined": "MemberStatus"
+              }
+            },
+            {
+              "name": "bump",
+              "type": "u8"
+            }
+          ]
+        }
+      },
+      {
+        "name": "ProposalAccount",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "proposer",
+              "type": "publicKey"
+            },
+            {
+              "name": "ajoAccount",
+              "type": "publicKey"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "name": "proposalType",
+              "type": {
+                "defined": "ProposalType"
+              }
+            },
+            {
+              "name": "status",
+              "type": {
+                "defined": "ProposalStatus"
+              }
+            },
+            {
+              "name": "yesVotes",
+              "type": "u8"
+            },
+            {
+              "name": "noVotes",
+              "type": "u8"
+            },
+            {
+              "name": "abstainVotes",
+              "type": "u8"
+            },
+            {
+              "name": "createdAt",
+              "type": "i64"
+            },
+            {
+              "name": "endsAt",
+              "type": "i64"
+            },
+            {
+              "name": "executionData",
+              "type": {
+                "option": "bytes"
+              }
+            },
+            {
+              "name": "targetUser",
+              "type": {
+                "option": "publicKey"
+              }
+            },
+            {
+              "name": "bump",
+              "type": "u8"
+            }
+          ]
+        }
+      },
+      {
+        "name": "VoteAccount",
+        "type": {
+          "kind": "struct",
+          "fields": [
+            {
+              "name": "voter",
+              "type": "publicKey"
+            },
+            {
+              "name": "proposal",
+              "type": "publicKey"
+            },
+            {
+              "name": "vote",
+              "type": {
+                "defined": "VoteType"
+              }
+            },
+            {
+              "name": "votedAt",
+              "type": "i64"
+            },
+            {
+              "name": "bump",
+              "type": "u8"
+            }
+          ]
+        }
+      }
+    ],
+    "types": [
+      {
+        "name": "PoolStatus",
+        "type": {
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Pending"
+            },
+            {
+              "name": "Active"
+            },
+            {
+              "name": "Completed"
+            },
+            {
+              "name": "Cancelled"
+            }
+          ]
+        }
+      },
+      {
+        "name": "MemberStatus",
+        "type": {
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Active"
+            },
+            {
+              "name": "Removed"
+            },
+            {
+              "name": "Left"
+            }
+          ]
+        }
+      },
+      {
+        "name": "ProposalType",
+        "type": {
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "PayoutOrder"
+            },
+            {
+              "name": "EmergencyWithdrawal"
+            },
+            {
+              "name": "ExtendPool"
+            },
+            {
+              "name": "RemoveMember"
+            },
+            {
+              "name": "ChangeRules"
+            }
+          ]
+        }
+      },
+      {
+        "name": "ProposalStatus",
+        "type": {
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Active"
+            },
+            {
+              "name": "Executed"
+            },
+            {
+              "name": "Rejected"
+            },
+            {
+              "name": "Cancelled"
+            }
+          ]
+        }
+      },
+      {
+        "name": "VoteType",
+        "type": {
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Yes"
+            },
+            {
+              "name": "No"
+            },
+            {
+              "name": "Abstain"
+            }
+          ]
+        }
+      }
+    ],
+    "errors": [
+      {
+        "code": 6000,
+        "name": "Unauthorized",
+        "msg": "You are not authorized to perform this action"
+      },
+      {
+        "code": 6001,
+        "name": "PoolFull",
+        "msg": "The pool is already at maximum capacity"
+      },
+      {
+        "code": 6002,
+        "name": "AlreadyMember",
+        "msg": "You are already a member of this pool"
+      },
+      {
+        "code": 6003,
+        "name": "InvalidContribution",
+        "msg": "Invalid contribution amount"
+      },
+      {
+        "code": 6004,
+        "name": "NotMember",
+        "msg": "You are not a member of this pool"
+      },
+      {
+        "code": 6005,
+        "name": "InvalidPayoutRecipient",
+        "msg": "Invalid payout recipient"
+      },
+      {
+        "code": 6006,
+        "name": "PayoutAlreadyProcessed",
+        "msg": "Payout already processed for this period"
+      },
+      {
+        "code": 6007,
+        "name": "ProposalEnded",
+        "msg": "This proposal has already ended"
+      },
+      {
+        "code": 6008,
+        "name": "ProposalNotEnded",
+        "msg": "This proposal has not ended yet"
+      },
+      {
+        "code": 6009,
+        "name": "ProposalRejected",
+        "msg": "This proposal was rejected"
+      },
+      {
+        "code": 6010,
+        "name": "ProposalAlreadyExecuted",
+        "msg": "This proposal has already been executed"
+      },
+      {
+        "code": 6011,
+        "name": "InvalidProposalType",
+        "msg": "Invalid proposal type for this action"
+      },
+      {
+        "code": 6012,
+        "name": "InsufficientFunds",
+        "msg": "Insufficient funds for this action"
+      },
+      {
+        "code": 6013,
+        "name": "InvalidPoolStatus",
+        "msg": "Invalid pool status for this action"
+      },
+      {
+        "code": 6014,
+        "name": "InvalidMemberStatus",
+        "msg": "Invalid member status for this action"
+      },
+      {
+        "code": 6015,
+        "name": "InvalidDate",
+        "msg": "Invalid date for this action"
+      },
+      {
+        "code": 6016,
+        "name": "AlreadyVoted",
+        "msg": "You have already voted on this proposal"
+      }
+    ],
+    "metadata": {
+      "address": "AJo5dkPALcNU7YpYCvyV2k1wJCpNU9uEuTkwJ2Uvp9TP"
+    }
+  }
+  

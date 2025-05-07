@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { usePrivy } from "@/lib/privy"
-import { contributeToPool } from "@/lib/api"
+import { contributeToPool } from "@/lib/solana/ajo-contract"
 import type { Pool } from "@/lib/solana"
 import { useTokenBalances } from "@/lib/solana"
 import { formatCurrency } from "@/lib/utils"
