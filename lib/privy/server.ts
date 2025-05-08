@@ -33,11 +33,37 @@ export async function getPrivyUser(request: Request) {
       return null
     }
 
-    // Verify the token and get the user
-    const { user } = await privy.verifyAuthToken(token)
-    return user
+    // Verify the token and get the claims
+    const claims = await privy.verifyAuthToken(token)
+
+    // Return a user object with the userId
+    return {
+      id: claims.userId,
+      // Don't include wallets property as it doesn't exist on AuthTokenClaims
+    }
   } catch (error) {
     console.error("Error getting Privy user:", error)
+    return null
+  }
+}
+
+// Add the missing function that's being called in the route
+export async function getPrivyUserByAuthToken(token: string) {
+  try {
+    if (!token) {
+      return null
+    }
+
+    // Verify the token and get the claims
+    const claims = await privy.verifyAuthToken(token)
+
+    // Return a user object with the userId
+    return {
+      id: claims.userId,
+      // Don't include wallets property as it doesn't exist on AuthTokenClaims
+    }
+  } catch (error) {
+    console.error("Error getting Privy user by auth token:", error)
     return null
   }
 }

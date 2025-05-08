@@ -4,10 +4,7 @@ import { Connection, PublicKey, Transaction, LAMPORTS_PER_SOL } from "@solana/we
 import { createTransferCheckedInstruction, getAssociatedTokenAddress, getMint } from "@solana/spl-token"
 
 // Initialize Solana connection
-const getConnection = () => {
-  const endpoint = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com"
-  return new Connection(endpoint)
-}
+const connection = new Connection(process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com")
 
 // Convert SOL to lamports
 export const solToLamports = (sol: number): number => {
@@ -22,7 +19,6 @@ export const lamportsToSol = (lamports: number): number => {
 // Get the SOL balance for a wallet
 export async function getSolBalance(walletAddress: string): Promise<number> {
   try {
-    const connection = getConnection()
     const publicKey = new PublicKey(walletAddress)
     const balance = await connection.getBalance(publicKey)
     return lamportsToSol(balance)
@@ -35,7 +31,6 @@ export async function getSolBalance(walletAddress: string): Promise<number> {
 // Get the token balance for a wallet
 export async function getTokenBalance(walletAddress: string, tokenMint: string): Promise<number> {
   try {
-    const connection = getConnection()
     const publicKey = new PublicKey(walletAddress)
     const mintPublicKey = new PublicKey(tokenMint)
 
@@ -68,8 +63,6 @@ export async function createContributionTransaction(
   amount: number,
 ): Promise<Transaction> {
   try {
-    const connection = getConnection()
-
     // Get the mint info to get decimals
     const mintInfo = await getMint(connection, tokenMint)
 
@@ -114,8 +107,6 @@ export async function createPayoutTransaction(
   amount: number,
 ): Promise<Transaction> {
   try {
-    const connection = getConnection()
-
     // Get the mint info to get decimals
     const mintInfo = await getMint(connection, tokenMint)
 
@@ -152,18 +143,35 @@ export async function createPayoutTransaction(
   }
 }
 
-// Verify a transaction
+// Verify a transaction on the Solana blockchain
 export async function verifyTransaction(signature: string): Promise<boolean> {
   try {
-    const connection = getConnection()
+    // Get the transaction details
+    const transaction = await connection.getTransaction(signature, {
+      maxSupportedTransactionVersion: 0,
+    })
 
-    // Get the transaction status
-    const status = await connection.getSignatureStatus(signature)
+    // If transaction is null, it means it doesn't exist or hasn't been confirmed yet
+    if (!transaction) {
+      console.error("Transaction not found or not confirmed yet")
+      return false
+    }
 
-    // Check if the transaction was confirmed
-    return status.value !== null && status.value.confirmationStatus === "confirmed"
+    // Check if the transaction was successful
+    if (transaction.meta && transaction.meta.err) {
+      console.error("Transaction failed:", transaction.meta.err)
+      return false
+    }
+
+    // Additional verification logic can be added here
+    // For example, verify the sender, recipient, amount, etc.
+
+    return true
   } catch (error) {
     console.error("Error verifying transaction:", error)
     return false
   }
 }
+
+// Export the connection for use in other files
+export { connection }

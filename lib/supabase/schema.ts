@@ -1,117 +1,74 @@
-// This file defines the Supabase database schema types
-
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
     Tables: {
-      users: {
-        Row: {
-          id: string
-          created_at: string
-          updated_at: string
-          privy_id: string
-          wallet_address: string
-          display_name: string | null
-          email: string | null
-          avatar_url: string | null
-          is_premium: boolean
-        }
-        Insert: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-          privy_id: string
-          wallet_address: string
-          display_name?: string | null
-          email?: string | null
-          avatar_url?: string | null
-          is_premium?: boolean
-        }
-        Update: {
-          id?: string
-          created_at?: string
-          updated_at?: string
-          privy_id?: string
-          wallet_address?: string
-          display_name?: string | null
-          email?: string | null
-          avatar_url?: string | null
-          is_premium?: boolean
-        }
-      }
       pools: {
         Row: {
           id: string
           created_at: string
           updated_at: string
           name: string
-          description: string
+          description: string | null
+          slug: string
           creator_id: string
+          start_date: string
+          end_date: string | null
+          frequency: "weekly" | "biweekly" | "monthly"
           contribution_amount: number
           contribution_token: string
           contribution_token_symbol: string
-          frequency: "daily" | "weekly" | "biweekly" | "monthly"
           total_members: number
           current_members: number
-          start_date: string
-          end_date: string
+          total_contributed: number
           next_payout_date: string
           next_payout_member_id: string | null
-          total_contributed: number
           yield_enabled: boolean
-          current_yield: number | null
           status: "pending" | "active" | "completed" | "cancelled"
-          slug: string
-          is_premium: boolean
         }
         Insert: {
           id?: string
           created_at?: string
           updated_at?: string
           name: string
-          description: string
+          description?: string | null
+          slug?: string
           creator_id: string
+          start_date: string
+          end_date?: string | null
+          frequency: "weekly" | "biweekly" | "monthly"
           contribution_amount: number
           contribution_token: string
           contribution_token_symbol: string
-          frequency: "daily" | "weekly" | "biweekly" | "monthly"
           total_members: number
           current_members?: number
-          start_date: string
-          end_date: string
+          total_contributed?: number
           next_payout_date?: string
           next_payout_member_id?: string | null
-          total_contributed?: number
           yield_enabled?: boolean
-          current_yield?: number | null
           status?: "pending" | "active" | "completed" | "cancelled"
-          slug: string
-          is_premium?: boolean
         }
         Update: {
           id?: string
           created_at?: string
           updated_at?: string
           name?: string
-          description?: string
+          description?: string | null
+          slug?: string
           creator_id?: string
+          start_date?: string
+          end_date?: string | null
+          frequency?: "weekly" | "biweekly" | "monthly"
           contribution_amount?: number
           contribution_token?: string
           contribution_token_symbol?: string
-          frequency?: "daily" | "weekly" | "biweekly" | "monthly"
           total_members?: number
           current_members?: number
-          start_date?: string
-          end_date?: string
+          total_contributed?: number
           next_payout_date?: string
           next_payout_member_id?: string | null
-          total_contributed?: number
           yield_enabled?: boolean
-          current_yield?: number | null
           status?: "pending" | "active" | "completed" | "cancelled"
-          slug?: string
-          is_premium?: boolean
         }
       }
       pool_members: {
@@ -125,7 +82,7 @@ export interface Database {
           has_received_payout: boolean
           total_contributed: number
           last_contribution_date: string | null
-          status: "active" | "removed" | "left"
+          status: "pending" | "active" | "removed"
         }
         Insert: {
           id?: string
@@ -133,11 +90,11 @@ export interface Database {
           updated_at?: string
           pool_id: string
           user_id: string
-          position?: number
+          position: number
           has_received_payout?: boolean
           total_contributed?: number
           last_contribution_date?: string | null
-          status?: "active" | "removed" | "left"
+          status?: "pending" | "active" | "removed"
         }
         Update: {
           id?: string
@@ -149,7 +106,7 @@ export interface Database {
           has_received_payout?: boolean
           total_contributed?: number
           last_contribution_date?: string | null
-          status?: "active" | "removed" | "left"
+          status?: "pending" | "active" | "removed"
         }
       }
       contributions: {
@@ -237,6 +194,44 @@ export interface Database {
           payout_date?: string
         }
       }
+      penalties: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          pool_id: string
+          user_id: string
+          amount: number
+          token: string
+          token_symbol: string
+          reason: "late_contribution" | "missed_contribution" | "other"
+          status: "pending" | "paid" | "waived"
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          pool_id: string
+          user_id: string
+          amount: number
+          token: string
+          token_symbol: string
+          reason: "late_contribution" | "missed_contribution" | "other"
+          status?: "pending" | "paid" | "waived"
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          pool_id?: string
+          user_id?: string
+          amount?: number
+          token?: string
+          token_symbol?: string
+          reason?: "late_contribution" | "missed_contribution" | "other"
+          status?: "pending" | "paid" | "waived"
+        }
+      }
       proposals: {
         Row: {
           id: string
@@ -246,8 +241,8 @@ export interface Database {
           proposer_id: string
           title: string
           description: string
-          type: "payout_order" | "emergency_withdrawal" | "extend_pool" | "change_rules" | "remove_member"
-          status: "active" | "passed" | "rejected" | "executed"
+          type: "payout_order" | "emergency_withdrawal" | "extend_pool" | "remove_member" | "change_rules"
+          status: "active" | "executed" | "rejected" | "cancelled"
           ends_at: string
           execution_data: Json | null
           target_user_id: string | null
@@ -260,8 +255,8 @@ export interface Database {
           proposer_id: string
           title: string
           description: string
-          type: "payout_order" | "emergency_withdrawal" | "extend_pool" | "change_rules" | "remove_member"
-          status?: "active" | "passed" | "rejected" | "executed"
+          type: "payout_order" | "emergency_withdrawal" | "extend_pool" | "remove_member" | "change_rules"
+          status?: "active" | "executed" | "rejected" | "cancelled"
           ends_at: string
           execution_data?: Json | null
           target_user_id?: string | null
@@ -274,8 +269,8 @@ export interface Database {
           proposer_id?: string
           title?: string
           description?: string
-          type?: "payout_order" | "emergency_withdrawal" | "extend_pool" | "change_rules" | "remove_member"
-          status?: "active" | "passed" | "rejected" | "executed"
+          type?: "payout_order" | "emergency_withdrawal" | "extend_pool" | "remove_member" | "change_rules"
+          status?: "active" | "executed" | "rejected" | "cancelled"
           ends_at?: string
           execution_data?: Json | null
           target_user_id?: string | null
@@ -307,56 +302,35 @@ export interface Database {
           vote?: "yes" | "no" | "abstain"
         }
       }
-      penalties: {
+      users: {
         Row: {
           id: string
           created_at: string
           updated_at: string
-          pool_id: string
-          user_id: string
-          amount: number
-          token: string
-          token_symbol: string
-          reason: "late_contribution" | "missed_contribution" | "other"
-          status: "pending" | "paid" | "waived"
-          transaction_signature: string | null
+          privy_id: string
+          display_name: string | null
+          wallet_address: string | null
+          avatar_url: string | null
         }
         Insert: {
           id?: string
           created_at?: string
           updated_at?: string
-          pool_id: string
-          user_id: string
-          amount: number
-          token: string
-          token_symbol: string
-          reason: "late_contribution" | "missed_contribution" | "other"
-          status?: "pending" | "paid" | "waived"
-          transaction_signature?: string | null
+          privy_id: string
+          display_name?: string | null
+          wallet_address?: string | null
+          avatar_url?: string | null
         }
         Update: {
           id?: string
           created_at?: string
           updated_at?: string
-          pool_id?: string
-          user_id?: string
-          amount?: number
-          token?: string
-          token_symbol?: string
-          reason?: "late_contribution" | "missed_contribution" | "other"
-          status?: "pending" | "paid" | "waived"
-          transaction_signature?: string | null
+          privy_id?: string
+          display_name?: string | null
+          wallet_address?: string | null
+          avatar_url?: string | null
         }
       }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
     }
   }
 }
