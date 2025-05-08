@@ -1,14 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
+  experimental: {
+    // Keep this if you need the appDir feature, otherwise remove
+    appDir: true,
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-}
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.mjs$/,
+      include: /node_modules[\\/](dlv)/,
+      type: "javascript/auto",
+    });
 
-export default nextConfig
+    return config;
+  },
+};
+
+export default nextConfig;
