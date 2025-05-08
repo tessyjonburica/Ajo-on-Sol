@@ -1,9 +1,7 @@
 "use client"
 
-import type React from "react"
-
-// Mock Privy authentication helpers
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useEffect, useState, useMemo } from "react"
+import { usePrivy as usePrivyAuth, useWallets, useLogin } from "@privy-io/react-auth"
 
 // Types
 export type User = {
@@ -26,8 +24,7 @@ export type PrivyContextType = {
   getWalletAddress: () => string | null
 }
 
-// Create context
-export const PrivyContext = createContext<PrivyContextType>({
+const PrivyContext = createContext<PrivyContextType>({
   user: null,
   isAuthenticated: false,
   isLoading: true,
@@ -36,66 +33,71 @@ export const PrivyContext = createContext<PrivyContextType>({
   getWalletAddress: () => null,
 })
 
-// Mock user data
-const MOCK_USER: User = {
-  id: "user_123456789",
-  wallet: {
-    address: "GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL",
-    publicKey: "GgE5ZbLHqBUBgcYnwxPvCgTZtABVPXrNzq1aQP4RCLwL",
-  },
-  name: "Demo User",
-  avatar: "/placeholder.svg?height=40&width=40",
+export const usePrivy = () => {
+  const context = useContext(PrivyContext)
+  if (!context) {
+    throw new Error("usePrivy must be used within a PrivyProvider")
+  }
+  return context
 }
 
-// Hook to use Privy context
-export const usePrivy = () => useContext(PrivyContext)
+export function PrivyProvider({ children }: { children: React.ReactNode }) {
+  // Initialize all hooks first
+  const [isMounted, setIsMounted] = useState(false)
+  const { ready, authenticated, login, logout } = usePrivyAuth()
+  const { wallets } = useWallets()
 
-// Provider component
-export const PrivyProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Memoize derived state
+  const mainWallet = useMemo(() => wallets[0], [wallets])
+  const isLoading = !ready
+  const isAuthenticated = authenticated && !!mainWallet
 
-  useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      // Check if user is stored in localStorage
-      const storedUser = localStorage.getItem("ajo_user")
-      if (storedUser) {
-        setUser(JSON.parse(storedUser))
+  const user = useMemo(() => 
+    mainWallet ? {
+      id: mainWallet.address,
+      wallet: {
+        address: mainWallet.address,
+        publicKey: mainWallet.address,
       }
-      setIsLoading(false)
-    }, 1000)
+    } : null,
+    [mainWallet]
+  )
 
-    return () => clearTimeout(timer)
+  const getWalletAddress = useMemo(() => 
+    () => mainWallet?.address || null,
+    [mainWallet]
+  )
+
+  // Handle mounting
+  useEffect(() => {
+    setIsMounted(true)
   }, [])
 
-  const login = async () => {
-    setIsLoading(true)
-    // Simulate login delay
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setUser(MOCK_USER)
-    localStorage.setItem("ajo_user", JSON.stringify(MOCK_USER))
-    setIsLoading(false)
-  }
+  // Debug logging
+  useEffect(() => {
+    if (isMounted) {
+      console.log('Privy Provider State:', {
+        ready,
+        authenticated,
+        isLoading,
+        isAuthenticated,
+        mainWallet: mainWallet?.address,
+        walletsCount: wallets.length,
+        isBrowser: typeof window !== 'undefined'
+      })
+    }
+  }, [isMounted, ready, authenticated, isLoading, isAuthenticated, mainWallet, wallets])
 
-  const logout = async () => {
-    setIsLoading(true)
-    // Simulate logout delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
-    setUser(null)
-    localStorage.removeItem("ajo_user")
-    setIsLoading(false)
-  }
-
-  const getWalletAddress = () => {
-    return user?.wallet.address || null
+  // Don't render until mounted
+  if (!isMounted) {
+    return null
   }
 
   return (
     <PrivyContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        isAuthenticated,
         isLoading,
         login,
         logout,
