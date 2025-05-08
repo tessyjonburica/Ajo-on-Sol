@@ -5,7 +5,7 @@ import type React from "react"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { usePrivyWithSupabase } from "@/lib/privy/hooks"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from 'lucide-react'
 
 interface AuthGateProps {
   children: React.ReactNode

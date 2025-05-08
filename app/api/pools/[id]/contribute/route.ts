@@ -12,7 +12,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     // Get the user from the auth token
     const authHeader = request.headers.get("authorization")
     let authToken = ""
-
+    
     if (authHeader && authHeader.startsWith("Bearer ")) {
       authToken = authHeader.substring(7)
     } else {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       const cookieStore = request.cookies
       authToken = cookieStore.get("privy-token")?.value || ""
     }
-
+    
     if (!authToken) {
       return NextResponse.json({ error: "Unauthorized - No token provided" }, { status: 401 })
     }
