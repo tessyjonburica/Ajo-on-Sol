@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { usePrivyWithSupabase } from "@/lib/privy/hooks"
+import { useWallet } from '@solana/wallet-adapter-react'
 import {
   Dialog,
   DialogContent,
@@ -29,7 +29,7 @@ interface JoinPoolModalProps {
 
 export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }: JoinPoolModalProps) {
   const router = useRouter()
-  const { privyUser, supabaseUser } = usePrivyWithSupabase()
+  const { publicKey, connected } = useWallet()
   const [poolId, setPoolId] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -68,24 +68,8 @@ export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }
         setError("Pool not found. Please check the ID and try again.")
         setPoolDetails(null)
       } else {
-        // Check if the user is already a member
-        const { data: membership } = await supabase
-          .from("pool_members")
-          .select("id")
-          .eq("pool_id", data.id)
-          .eq("user_id", supabaseUser?.id)
-          .maybeSingle()
-
-        if (membership) {
-          setError("You are already a member of this pool.")
-          setPoolDetails(null)
-        } else if (data.current_members >= data.total_members) {
-          setError("This pool is already full.")
-          setPoolDetails(null)
-        } else {
-          setPoolDetails(data)
-          setError(null)
-        }
+        setPoolDetails(data)
+        setError(null)
       }
     } catch (err) {
       console.error("Error searching for pool:", err)
@@ -96,7 +80,7 @@ export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }
   }
 
   const handleJoin = async () => {
-    if (!poolDetails || !supabaseUser) return
+    if (!poolDetails || !publicKey) return
 
     setIsLoading(true)
     setError(null)
@@ -107,6 +91,7 @@ export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ wallet_address: publicKey.toBase58() }),
       })
 
       if (!response.ok) {

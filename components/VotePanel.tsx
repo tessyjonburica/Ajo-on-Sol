@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { usePrivy } from "@/lib/privy"
 import { voteOnProposal, type Proposal } from "@/lib/api"
 import { formatDate, formatAddress } from "@/lib/utils"
 import { AlertCircle, Check, Clock, Loader2, ThumbsDown, ThumbsUp, Users, X } from "lucide-react"
@@ -17,11 +16,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 interface VotePanelProps {
   proposal: Proposal
   onVoteSuccess?: () => void
+  walletAddress?: string
 }
 
-export default function VotePanel({ proposal, onVoteSuccess }: VotePanelProps) {
-  const { user } = usePrivy()
-
+export default function VotePanel({ proposal, onVoteSuccess, walletAddress }: VotePanelProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isVoting, setIsVoting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,7 +58,7 @@ export default function VotePanel({ proposal, onVoteSuccess }: VotePanelProps) {
       return
     }
 
-    if (!user?.wallet.address) {
+    if (!walletAddress) {
       setError("Please connect your wallet to vote")
       return
     }
@@ -71,7 +69,7 @@ export default function VotePanel({ proposal, onVoteSuccess }: VotePanelProps) {
 
     try {
       const vote = selectedOption === "Approve" ? "yes" : "no"
-      await voteOnProposal(proposal.poolId, proposal.id, user.wallet.address, vote)
+      await voteOnProposal(proposal.poolId, proposal.id, walletAddress, vote)
 
       setSuccess("Your vote has been recorded successfully")
       if (onVoteSuccess) {

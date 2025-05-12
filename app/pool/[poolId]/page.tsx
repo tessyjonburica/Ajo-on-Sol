@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { usePrivy } from "@/lib/privy"
+import { useWallet } from '@solana/wallet-adapter-react'
 import { usePoolDetails, useTransactions } from "@/lib/solana"
 import { formatDate, formatCurrency, formatAddress, timeRemaining } from "@/lib/utils"
 import { getPoolProposals } from "@/lib/api"
@@ -43,9 +43,10 @@ import TransactionItem from "@/components/TransactionItem"
 import PoolSettings from "@/components/PoolSettings"
 
 export default function PoolDetailsPage({ params }: { params: { poolId: string } }) {
-  const { user } = usePrivy()
+  const { publicKey, connected } = useWallet()
   const { pool, isLoading: isLoadingPool, error: poolError } = usePoolDetails(params.poolId)
-  const { transactions, isLoading: isLoadingTransactions } = useTransactions(user?.wallet.address)
+  const walletAddress = publicKey?.toBase58() || undefined
+  const { transactions, isLoading: isLoadingTransactions } = useTransactions(walletAddress)
 
   const [activeTab, setActiveTab] = useState("overview")
   const [proposals, setProposals] = useState<any[]>([])
@@ -58,8 +59,8 @@ export default function PoolDetailsPage({ params }: { params: { poolId: string }
   const poolTransactions = transactions.filter((tx) => tx.poolId === params.poolId)
 
   // Check permissions
-  const isCreator = pool ? isPoolCreator(user?.wallet.address, pool) : false
-  const isMember = pool ? isPoolMember(user?.wallet.address, pool) : false
+  const isCreator = pool && walletAddress ? isPoolCreator(walletAddress, pool) : false
+  const isMember = pool && walletAddress ? isPoolMember(walletAddress, pool) : false
   const isPremium = pool ? isPremiumPool(pool.id) : false
 
   // Load proposals
@@ -547,7 +548,7 @@ export default function PoolDetailsPage({ params }: { params: { poolId: string }
       <PremiumUpgradeModal
         isOpen={showPremiumModal}
         onClose={() => setShowPremiumModal(false)}
-        userAddress={user?.wallet.address}
+        userAddress={walletAddress}
         poolId={pool.id}
         onSuccess={handleRefresh}
       />

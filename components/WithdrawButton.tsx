@@ -2,8 +2,8 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { usePrivy } from "@/lib/privy"
-import { withdrawFromPool } from "@/lib/solana/ajo-contract"
+import { useWallet } from '@solana/wallet-adapter-react'
+import { withdrawFromAjoPool } from "@/lib/solana/ajo-contract"
 import type { Pool } from "@/lib/solana"
 import { formatCurrency } from "@/lib/utils"
 import { AlertTriangle, Check, Loader2, LogOut, X } from "lucide-react"
@@ -27,7 +27,7 @@ interface WithdrawButtonProps {
 }
 
 export default function WithdrawButton({ pool, onSuccess }: WithdrawButtonProps) {
-  const { user } = usePrivy()
+  const { publicKey } = useWallet()
 
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState<string>("")
@@ -41,7 +41,8 @@ export default function WithdrawButton({ pool, onSuccess }: WithdrawButtonProps)
       return
     }
 
-    if (!user?.wallet.address) {
+    const walletAddress = publicKey?.toBase58() || undefined
+    if (!walletAddress) {
       setError("Please connect your wallet to withdraw")
       return
     }
@@ -51,7 +52,7 @@ export default function WithdrawButton({ pool, onSuccess }: WithdrawButtonProps)
     setSuccess(null)
 
     try {
-      await withdrawFromPool(pool.id, user.wallet.address, Number.parseFloat(amount))
+      await withdrawFromAjoPool(pool.id, walletAddress, Number.parseFloat(amount))
 
       setSuccess(`Successfully withdrew ${amount} ${pool.contributionTokenSymbol} from the pool`)
       setAmount("")

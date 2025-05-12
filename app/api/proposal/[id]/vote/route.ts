@@ -1,15 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/client"
-import { getPrivyUser } from "@/lib/privy/server"
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Get the Privy user from the request
-    const privyUser = await getPrivyUser(request)
-    if (!privyUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     // Get the request body
     const body = await request.json()
 
@@ -25,7 +18,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("id")
-      .eq("privy_id", privyUser.id)
+      .eq("wallet_address", request.headers.get("wallet-address"))
       .single()
 
     if (userError || !user) {

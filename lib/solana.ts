@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { supabase } from "./supabase/client"
-import { usePrivy } from "@privy-io/react-auth"
+import { useWallet } from '@solana/wallet-adapter-react'
 
 // Types
 export type TokenBalance = {
@@ -57,11 +57,12 @@ export const useTokenBalances = () => {
   const [balances, setBalances] = useState<TokenBalance[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user } = usePrivy()
+  const { publicKey } = useWallet()
 
   useEffect(() => {
     const fetchBalances = async () => {
-      if (!user?.wallet?.address) {
+      const walletAddress = publicKey?.toBase58()
+      if (!walletAddress) {
         setBalances([])
         setIsLoading(false)
         return
@@ -101,7 +102,7 @@ export const useTokenBalances = () => {
     }
 
     fetchBalances()
-  }, [user?.wallet?.address])
+  }, [publicKey])
 
   return { balances, isLoading, error }
 }
@@ -111,11 +112,11 @@ export const usePools = (walletAddress?: string) => {
   const [pools, setPools] = useState<Pool[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user } = usePrivy()
+  const { publicKey } = useWallet()
 
   useEffect(() => {
     const fetchPools = async () => {
-      if (!walletAddress || !user) {
+      if (!walletAddress || !publicKey) {
         setPools([])
         setIsLoading(false)
         return
@@ -178,7 +179,7 @@ export const usePools = (walletAddress?: string) => {
     return () => {
       poolsSubscription.unsubscribe()
     }
-  }, [walletAddress, user])
+  }, [walletAddress, publicKey])
 
   return { pools, isLoading, error }
 }
@@ -188,11 +189,11 @@ export const usePoolDetails = (poolId: string) => {
   const [pool, setPool] = useState<Pool | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user } = usePrivy()
+  const { publicKey } = useWallet()
 
   useEffect(() => {
     const fetchPoolDetails = async () => {
-      if (!poolId || !user) {
+      if (!poolId || !publicKey) {
         setPool(null)
         setIsLoading(false)
         return
@@ -255,7 +256,7 @@ export const usePoolDetails = (poolId: string) => {
     return () => {
       poolSubscription.unsubscribe()
     }
-  }, [poolId, user])
+  }, [poolId, publicKey])
 
   return { pool, isLoading, error }
 }
@@ -265,11 +266,11 @@ export const useTransactions = (walletAddress?: string) => {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { user } = usePrivy()
+  const { publicKey } = useWallet()
 
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (!walletAddress || !user) {
+      if (!walletAddress || !publicKey) {
         setTransactions([])
         setIsLoading(false)
         return
@@ -383,7 +384,7 @@ export const useTransactions = (walletAddress?: string) => {
       contributionsSubscription.unsubscribe()
       payoutsSubscription.unsubscribe()
     }
-  }, [walletAddress, user])
+  }, [walletAddress, publicKey])
 
   return { transactions, isLoading, error }
 }

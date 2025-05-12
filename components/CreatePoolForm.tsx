@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { usePrivy } from "@/lib/privy"
+import { useWallet } from '@solana/wallet-adapter-react'
 import { createPool } from "@/lib/api"
 import { useTokenBalances } from "@/lib/solana"
 import { ArrowRight, Calendar, Check, ChevronsUpDown, DollarSign, Loader2, Users } from "lucide-react"
@@ -30,7 +30,7 @@ const frequencies = [
 
 export default function CreatePoolForm() {
   const router = useRouter()
-  const { user } = usePrivy()
+  const { publicKey, connected } = useWallet()
   const { balances, isLoading: isLoadingTokens } = useTokenBalances()
 
   const [step, setStep] = useState(1)
@@ -193,8 +193,9 @@ export default function CreatePoolForm() {
       // Convert string values to appropriate types
       const poolData = {
         ...formData,
-        creator: user?.wallet.address || "",
-        members: [user?.wallet.address || ""],
+        creator: publicKey ? publicKey.toBase58() : "",
+        members: [publicKey ? publicKey.toBase58() : ""],
+        wallet_address: publicKey ? publicKey.toBase58() : "",
         contributionAmount: Number.parseFloat(formData.contributionAmount),
         totalMembers: Number.parseInt(formData.totalMembers),
         startDate: new Date(formData.startDate),
