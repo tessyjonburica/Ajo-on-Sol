@@ -84,13 +84,16 @@ export async function POST(request: NextRequest) {
 
     // If user does not exist, create one
     if (!user) {
+      // Add a dummy privy_id for now to satisfy NOT NULL constraint
+      const dummyPrivyId = `wallet:${walletAddress}`
       const { data: newUser, error: newUserError } = await supabase
         .from("users")
-        .insert({ wallet_address: walletAddress })
+        .insert({ wallet_address: walletAddress, privy_id: dummyPrivyId })
         .select("id")
         .single()
       if (newUserError || !newUser) {
-        return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
+        console.error("Failed to create user:", newUserError)
+        return NextResponse.json({ error: "Failed to create user", details: newUserError?.message }, { status: 500 })
       }
       user = newUser
     }
