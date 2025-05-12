@@ -1,17 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/client"
-import { getPrivyUser } from "@/lib/privy/server"
 
 export async function POST(request: NextRequest) {
   try {
-    // Get the Privy user from the request
-    const privyUser = await getPrivyUser(request)
-    if (!privyUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     // Get the request body
     const body = await request.json()
+    const walletAddress = body.wallet_address
+    if (!walletAddress) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     // Validate the request body
     if (!body.poolId || !body.title || !body.description || !body.type || !body.durationDays) {
@@ -25,7 +22,7 @@ export async function POST(request: NextRequest) {
     const { data: user, error: userError } = await supabase
       .from("users")
       .select("id")
-      .eq("privy_id", privyUser.id)
+      .eq("wallet_address", walletAddress)
       .single()
 
     if (userError || !user) {

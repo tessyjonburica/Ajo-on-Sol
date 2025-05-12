@@ -8,11 +8,11 @@ export async function getPoolById(poolId: string) {
     .from("pools")
     .select(`
       *,
-      creator:creator_id(id, privy_id, display_name, wallet_address, avatar_url),
-      next_payout_member:next_payout_member_id(id, privy_id, display_name, wallet_address, avatar_url),
+      creator:creator_id(id, display_name, wallet_address, avatar_url),
+      next_payout_member:next_payout_member_id(id, display_name, wallet_address, avatar_url),
       pool_members(
         *,
-        user:user_id(id, privy_id, display_name, wallet_address, avatar_url)
+        user:user_id(id, display_name, wallet_address, avatar_url)
       )
     `)
     .eq("id", poolId)
@@ -69,8 +69,8 @@ export async function getPoolProposals(poolId: string) {
     .from("proposals")
     .select(`
       *,
-      proposer:proposer_id(id, privy_id, display_name, wallet_address, avatar_url),
-      target_user:target_user_id(id, privy_id, display_name, wallet_address, avatar_url),
+      proposer:proposer_id(id, display_name, wallet_address, avatar_url),
+      target_user:target_user_id(id, display_name, wallet_address, avatar_url),
       votes(*)
     `)
     .eq("pool_id", poolId)
@@ -100,4 +100,43 @@ export async function getUserVoteOnProposal(proposalId: string, userId: string) 
   }
 
   return data;
+}
+
+/**
+ * Creates a new pool by calling the /api/pools endpoint
+ */
+export async function createPool(poolData: any) {
+  const response = await fetch('/api/pools', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(poolData),
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    console.error('Error creating pool via API:', json);
+    throw new Error(json.error || 'Failed to create pool');
+  }
+  return json.pool;
+}
+
+/**
+ * Vote on a proposal by calling the /api/proposal/[id]/vote endpoint
+ */
+export async function voteOnProposal(poolId: string, proposalId: string, walletAddress: string, vote: string) {
+  const response = await fetch(`/api/proposal/${proposalId}/vote`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'wallet-address': walletAddress,
+    },
+    body: JSON.stringify({ vote }),
+  });
+  const json = await response.json();
+  if (!response.ok) {
+    console.error('Error voting on proposal via API:', json);
+    throw new Error(json.error || 'Failed to vote on proposal');
+  }
+  return json;
 }

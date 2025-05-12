@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePrivy } from "@/lib/privy";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { cn } from "@/lib/utils";
 import {
   Bell,
@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = usePrivy();
+  const { publicKey, connected, disconnect, connecting } = useWallet();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -39,7 +39,6 @@ export default function Navbar() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -51,6 +50,13 @@ export default function Navbar() {
     { name: "Create Pool", href: "/create", icon: Plus },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
+
+  // Logging wallet connection status
+  useEffect(() => {
+    if (connected && publicKey) {
+      console.log("Navbar: Wallet connected:", publicKey.toBase58());
+    }
+  }, [connected, publicKey]);
 
   return (
     <header
@@ -79,7 +85,6 @@ export default function Navbar() {
                 priority
               />
             </motion.div>
-
             <motion.span
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -91,7 +96,7 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {isAuthenticated && (
+        {connected && publicKey && (
           <nav className="hidden md:flex md:items-center md:gap-8">
             {navItems.map((item) => (
               <Link
@@ -119,7 +124,7 @@ export default function Navbar() {
         )}
 
         <div className="flex items-center gap-5">
-          {isAuthenticated ? (
+          {connected && publicKey ? (
             <>
               <Button
                 variant="ghost"
@@ -138,16 +143,12 @@ export default function Navbar() {
                     className="flex items-center gap-2 rounded-full p-1.5 pr-4 hover:bg-accent"
                   >
                     <Avatar className="h-8 w-8 border border-border">
-                      <AvatarImage
-                        src={user?.avatar || "/placeholder.svg"}
-                        alt={user?.name || ""}
-                      />
                       <AvatarFallback className="bg-purple-100 text-purple-800">
-                        {user?.name?.charAt(0) || "U"}
+                        {publicKey.toBase58().slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium">
-                      {user?.name || "User"}
+                      {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
                     </span>
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </Button>
@@ -156,33 +157,29 @@ export default function Navbar() {
                   align="end"
                   className="w-56 bg-popover/95 backdrop-blur-sm border border-border shadow-lg"
                 >
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>Wallet</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link
-                      href="/dashboard"
+                    <a
+                      href={`https://solscan.io/account/${publicKey.toBase58()}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="flex cursor-pointer items-center"
                     >
                       <Home className="mr-2 h-4 w-4" />
-                      <span>Dashboard</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/settings"
-                      className="flex cursor-pointer items-center"
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </Link>
+                      <span>View on Solscan</span>
+                    </a>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => logout()}
+                    onClick={() => {
+                      console.log("Navbar: Disconnecting wallet");
+                      disconnect();
+                    }}
                     className="flex cursor-pointer items-center text-destructive focus:text-destructive"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                    <span>Disconnect</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -277,20 +274,19 @@ export default function Navbar() {
                   <div className="flex items-center gap-3 rounded-md px-4 py-3 bg-accent/50">
                     <Avatar className="h-12 w-12 border border-border">
                       <AvatarImage
-                        src={user?.avatar || "/placeholder.svg"}
-                        alt={user?.name || ""}
+                        src={publicKey ? `/solana-${publicKey.toBase58().slice(0, 4)}.png` : "/placeholder.svg"}
+                        alt={publicKey ? publicKey.toBase58().slice(0, 4) : "Wallet"}
                       />
                       <AvatarFallback className="bg-purple-100 text-purple-800">
-                        {user?.name?.charAt(0) || "U"}
+                        {publicKey ? publicKey.toBase58().slice(0, 4) : "Wallet"}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="text-base font-medium text-foreground">
-                        {user?.name || "User"}
+                        {publicKey ? publicKey.toBase58().slice(0, 4) : "Wallet"}
                       </p>
                       <p className="text-sm font-medium text-muted-foreground">
-                        {user?.wallet.address.slice(0, 6)}...
-                        {user?.wallet.address.slice(-4)}
+                        {publicKey ? publicKey.toBase58().slice(0, 4) : "Not connected"}
                       </p>
                     </div>
                   </div>
@@ -298,12 +294,13 @@ export default function Navbar() {
                     variant="outline"
                     className="mt-2 w-full justify-start gap-2"
                     onClick={() => {
-                      logout();
+                      console.log("Navbar: Disconnecting wallet");
+                      disconnect();
                       setMobileMenuOpen(false);
                     }}
                   >
                     <LogOut className="h-4 w-4" />
-                    <span>Log out</span>
+                    <span>Disconnect</span>
                   </Button>
                 </div>
               </div>

@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { usePrivy } from "@/lib/privy"
 import { isPoolCreator, canEditPool } from "@/lib/roles"
 import { isPremiumPool } from "@/lib/subscription"
 import { isFeatureAvailable } from "@/lib/premium"
@@ -22,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import LockedFeatureBanner from "@/components/LockedFeatureBanner"
 import PremiumBadge from "@/components/PremiumBadge"
+import { useWallet } from '@solana/wallet-adapter-react'
 
 interface PoolSettingsProps {
   pool: Pool
@@ -30,21 +30,22 @@ interface PoolSettingsProps {
 }
 
 export default function PoolSettings({ pool, onSuccess, onOpenPremiumModal }: PoolSettingsProps) {
-  const { user } = usePrivy()
+  const { publicKey } = useWallet()
+  const walletAddress = publicKey?.toBase58() || undefined
   const [activeTab, setActiveTab] = useState("general")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
   // Check permissions
-  const isCreator = isPoolCreator(user?.wallet.address, pool)
-  const canEdit = canEditPool(user?.wallet.address, pool)
+  const isCreator = isPoolCreator(walletAddress, pool)
+  const canEdit = canEditPool(walletAddress, pool)
   const isPremium = isPremiumPool(pool.id)
 
   // Check premium features
-  const canUseCustomSchedule = isFeatureAvailable("custom_schedule", user?.wallet.address, pool.id)
-  const canUseLargePool = isFeatureAvailable("large_pool", user?.wallet.address, pool.id)
-  const canUseYieldFarming = isFeatureAvailable("yield_farming", user?.wallet.address, pool.id)
+  const canUseCustomSchedule = isFeatureAvailable("custom_schedule", walletAddress, pool.id)
+  const canUseLargePool = isFeatureAvailable("large_pool", walletAddress, pool.id)
+  const canUseYieldFarming = isFeatureAvailable("yield_farming", walletAddress, pool.id)
 
   const [formData, setFormData] = useState({
     name: pool.name,

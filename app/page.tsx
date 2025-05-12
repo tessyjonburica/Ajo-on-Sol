@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { usePrivy } from "@/lib/privy"
 import {
   ArrowRight,
   CheckCircle2,
@@ -18,10 +17,13 @@ import {
   ArrowDown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 
 export default function Home() {
   const router = useRouter()
-  const { isAuthenticated, isLoading, login } = usePrivy()
+  const { publicKey, connected, connecting } = useWallet()
+  const { setVisible } = useWalletModal()
   const [isConnecting, setIsConnecting] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -38,14 +40,21 @@ export default function Home() {
   const handleConnect = async () => {
     setIsConnecting(true)
     try {
-      await login()
-      router.push("/dashboard")
+      console.log('Connect Wallet button clicked')
+      setVisible(true) // Open wallet modal
     } catch (error) {
-      console.error("Failed to connect wallet:", error)
+      console.error("Failed to open wallet modal:", error)
     } finally {
       setIsConnecting(false)
     }
   }
+
+  useEffect(() => {
+    if (connected && publicKey) {
+      console.log('Wallet connected:', publicKey.toBase58())
+      router.push('/dashboard')
+    }
+  }, [connected, publicKey, router])
 
   const features = [
     {
@@ -134,25 +143,24 @@ export default function Home() {
                   transparent, and efficient community savings pools.
                 </p>
                 <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-                  {isAuthenticated ? (
+                  {connected && publicKey ? (
                     <Button
                       asChild
                       size="lg"
                       className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-md text-lg h-14 px-8"
                     >
-                      <Link href="/dashboard">
-                        Go to Dashboard
-                        <ArrowRight className="h-5 w-5 ml-1" />
-                      </Link>
+                      <span>
+                        Connected: {publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}
+                      </span>
                     </Button>
                   ) : (
                     <Button
                       size="lg"
                       className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-md text-lg h-14 px-8"
                       onClick={handleConnect}
-                      disabled={isLoading || isConnecting}
+                      disabled={connecting || isConnecting}
                     >
-                      {isLoading || isConnecting ? (
+                      {connecting || isConnecting ? (
                         <>
                           <Loader2 className="h-5 w-5 animate-spin" />
                           Connecting...
@@ -406,7 +414,7 @@ export default function Home() {
                 Join Ajo on Sol today and experience the future of community savings
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                {isAuthenticated ? (
+                {connected && publicKey ? (
                   <Button asChild size="lg" className="bg-white text-purple-600 hover:bg-white/90 h-14 px-8 text-lg">
                     <Link href="/dashboard">
                       Go to Dashboard
@@ -418,9 +426,9 @@ export default function Home() {
                     size="lg"
                     className="bg-white text-purple-600 hover:bg-white/90 h-14 px-8 text-lg"
                     onClick={handleConnect}
-                    disabled={isLoading || isConnecting}
+                    disabled={connecting || isConnecting}
                   >
-                    {isLoading || isConnecting ? (
+                    {connecting || isConnecting ? (
                       <>
                         <Loader2 className="h-5 w-5 animate-spin" />
                         Connecting...

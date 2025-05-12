@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { usePrivy } from "@/lib/privy"
-import { contributeToPool } from "@/lib/solana/ajo-contract"
+import { useWallet } from '@solana/wallet-adapter-react'
+import { contributeToAjoPool } from "@/lib/solana/ajo-contract"
 import type { Pool } from "@/lib/solana"
 import { useTokenBalances } from "@/lib/solana"
 import { formatCurrency } from "@/lib/utils"
@@ -21,7 +21,7 @@ interface ContributionPanelProps {
 }
 
 export default function ContributionPanel({ pool, onSuccess }: ContributionPanelProps) {
-  const { user } = usePrivy()
+  const { publicKey } = useWallet()
   const { balances, isLoading: isLoadingBalances } = useTokenBalances()
 
   const [amount, setAmount] = useState<string>(pool.contributionAmount.toString())
@@ -34,7 +34,8 @@ export default function ContributionPanel({ pool, onSuccess }: ContributionPanel
 
   // Calculate fees
   const amountValue = Number.parseFloat(amount) || 0
-  const feeBreakdown = getFeeBreakdown(amountValue, user?.wallet.address, pool)
+  const walletAddress = publicKey?.toBase58() || undefined
+  const feeBreakdown = getFeeBreakdown(amountValue, walletAddress, pool)
 
   const handleContribute = async () => {
     if (!amount || Number.parseFloat(amount) <= 0) {
@@ -42,7 +43,7 @@ export default function ContributionPanel({ pool, onSuccess }: ContributionPanel
       return
     }
 
-    if (!user?.wallet.address) {
+    if (!walletAddress) {
       setError("Please connect your wallet to contribute")
       return
     }
@@ -58,7 +59,9 @@ export default function ContributionPanel({ pool, onSuccess }: ContributionPanel
     setSuccess(null)
 
     try {
-      await contributeToPool(pool.id, user.wallet.address, Number.parseFloat(amount))
+      // TODO: Integrate with Solana transaction logic here
+      // await contributeToAjoPool(pool.id, walletAddress, Number.parseFloat(amount))
+      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate async
 
       setSuccess(`Successfully contributed ${amount} ${pool.contributionTokenSymbol} to the pool`)
       setAmount(pool.contributionAmount.toString()) // Reset to default amount

@@ -1,80 +1,61 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/client"
-import { getPrivyUser } from "@/lib/privy/server"
 
 export async function GET(request: NextRequest) {
-  try {
-    // Get the Privy user from the request
-    const privyUser = await getPrivyUser(request)
-    if (!privyUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Get the Supabase client
-    const supabase = createServerSupabaseClient()
-
-    // Get the user from Supabase
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("privy_id", privyUser.id)
-      .single()
-
-    if (userError || !user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
-
-    // Get all pools where the user is a member
-    const { data: memberships, error: membershipsError } = await supabase
-      .from("pool_members")
-      .select("pool_id")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-
-    if (membershipsError) {
-      return NextResponse.json({ error: "Failed to fetch memberships" }, { status: 500 })
-    }
-
-    if (!memberships || memberships.length === 0) {
-      return NextResponse.json({ pools: [] })
-    }
-
-    // Get the pool details
-    const poolIds = memberships.map((m) => m.pool_id)
-    const { data: pools, error: poolsError } = await supabase
-      .from("pools")
-      .select(`
-        *,
-        creator:creator_id(id, privy_id, display_name, wallet_address, avatar_url),
-        next_payout_member:next_payout_member_id(id, privy_id, display_name, wallet_address, avatar_url),
-        pool_members(
-          *,
-          user:user_id(id, privy_id, display_name, wallet_address, avatar_url)
-        )
-      `)
-      .in("id", poolIds)
-
-    if (poolsError) {
-      return NextResponse.json({ error: "Failed to fetch pools" }, { status: 500 })
-    }
-
-    return NextResponse.json({ pools: pools || [] })
-  } catch (error) {
-    console.error("Error in GET /api/pools:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  // Get wallet address from query param or header
+  const url = new URL(request.url)
+  const walletAddress = url.searchParams.get("wallet_address") || request.headers.get("wallet-address")
+  if (!walletAddress) {
+    return NextResponse.json({ error: "Missing wallet address" }, { status: 400 })
   }
+
+  const supabase = createServerSupabaseClient()
+
+  // Get the user by wallet address
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("id")
+    .eq("wallet_address", walletAddress)
+    .maybeSingle()
+
+  if (userError || !user) {
+    return NextResponse.json({ pools: [] })
+  }
+
+  // Get all pool memberships for the user
+  const { data: memberships, error: membershipsError } = await supabase
+    .from("pool_members")
+    .select("pool_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+
+  if (membershipsError || !memberships || memberships.length === 0) {
+    return NextResponse.json({ pools: [] })
+  }
+
+  // Get the pool details
+  const poolIds = memberships.map((m) => m.pool_id)
+  const { data: pools, error: poolsError } = await supabase
+    .from("pools")
+    .select("*")
+    .in("id", poolIds)
+    .order("created_at", { ascending: false })
+
+  if (poolsError) {
+    return NextResponse.json({ error: poolsError.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ pools: pools || [] })
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Get the Privy user from the request
-    const privyUser = await getPrivyUser(request)
-    if (!privyUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     // Get the request body
     const body = await request.json()
+    const walletAddress = body.wallet_address
+    if (!walletAddress) {
+      return NextResponse.json({ error: "Missing wallet address" }, { status: 400 })
+    }
 
     // Validate the request body
     if (
@@ -94,15 +75,24 @@ export async function POST(request: NextRequest) {
     // Get the Supabase client
     const supabase = createServerSupabaseClient()
 
-    // Get the user from Supabase
-    const { data: user, error: userError } = await supabase
+    // Get the user from Supabase by wallet_address
+    let { data: user, error: userError } = await supabase
       .from("users")
       .select("id")
-      .eq("privy_id", privyUser.id)
-      .single()
+      .eq("wallet_address", walletAddress)
+      .maybeSingle()
 
-    if (userError || !user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
+    // If user does not exist, create one
+    if (!user) {
+      const { data: newUser, error: newUserError } = await supabase
+        .from("users")
+        .insert({ wallet_address: walletAddress })
+        .select("id")
+        .single()
+      if (newUserError || !newUser) {
+        return NextResponse.json({ error: "Failed to create user" }, { status: 500 })
+      }
+      user = newUser
     }
 
     // Create the pool
@@ -159,3 +149,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
+

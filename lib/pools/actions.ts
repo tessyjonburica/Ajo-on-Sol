@@ -12,12 +12,12 @@ export async function createPool(
     InsertTables<"pools">,
     "id" | "created_at" | "updated_at" | "slug" | "current_members" | "total_contributed" | "next_payout_date"
   >,
-  privyId: string,
+  wallet_address: string,
 ) {
   const supabase = createServerSupabaseClient()
 
   // Get the user from Supabase
-  const { data: user, error: userError } = await supabase.from("users").select("id").eq("privy_id", privyId).single()
+  const { data: user, error: userError } = await supabase.from("users").select("id").eq("wallet_address", wallet_address).single()
 
   if (userError || !user) {
     throw new Error("User not found")
@@ -72,11 +72,11 @@ export async function createPool(
 }
 
 // Join an existing pool
-export async function joinPool(poolId: string, privyId: string) {
+export async function joinPool(poolId: string, wallet_address: string) {
   const supabase = createServerSupabaseClient()
 
   // Get the user from Supabase
-  const { data: user, error: userError } = await supabase.from("users").select("id").eq("privy_id", privyId).single()
+  const { data: user, error: userError } = await supabase.from("users").select("id").eq("wallet_address", wallet_address).single()
 
   if (userError || !user) {
     throw new Error("User not found")
@@ -123,11 +123,11 @@ export async function joinPool(poolId: string, privyId: string) {
 }
 
 // Make a contribution to a pool
-export async function contributeToPool(poolId: string, amount: number, transactionSignature: string, privyId: string) {
+export async function contributeToPool(poolId: string, amount: number, transactionSignature: string, wallet_address: string) {
   const supabase = createServerSupabaseClient()
 
   // Get the user from Supabase
-  const { data: user, error: userError } = await supabase.from("users").select("id").eq("privy_id", privyId).single()
+  const { data: user, error: userError } = await supabase.from("users").select("id").eq("wallet_address", wallet_address).single()
 
   if (userError || !user) {
     throw new Error("User not found")
@@ -246,11 +246,11 @@ export async function contributeToPool(poolId: string, amount: number, transacti
 }
 
 // Process a payout for a pool
-export async function processPoolPayout(poolId: string, transactionSignature: string, privyId: string) {
+export async function processPoolPayout(poolId: string, transactionSignature: string, wallet_address: string) {
   const supabase = createServerSupabaseClient()
 
   // Get the user from Supabase (must be the pool creator or admin)
-  const { data: user, error: userError } = await supabase.from("users").select("id").eq("privy_id", privyId).single()
+  const { data: user, error: userError } = await supabase.from("users").select("id").eq("wallet_address", wallet_address).single()
 
   if (userError || !user) {
     throw new Error("User not found")
@@ -377,12 +377,12 @@ export async function createProposal(
     targetUserId?: string
     durationDays: number
   },
-  privyId: string,
+  wallet_address: string,
 ) {
   const supabase = createServerSupabaseClient()
 
   // Get the user from Supabase
-  const { data: user, error: userError } = await supabase.from("users").select("id").eq("privy_id", privyId).single()
+  const { data: user, error: userError } = await supabase.from("users").select("id").eq("wallet_address", wallet_address).single()
 
   if (userError || !user) {
     throw new Error("User not found")
@@ -433,11 +433,11 @@ export async function createProposal(
 }
 
 // Vote on a proposal
-export async function voteOnProposal(proposalId: string, vote: "yes" | "no" | "abstain", privyId: string) {
+export async function voteOnProposal(proposalId: string, vote: "yes" | "no" | "abstain", wallet_address: string) {
   const supabase = createServerSupabaseClient()
 
   // Get the user from Supabase
-  const { data: user, error: userError } = await supabase.from("users").select("id").eq("privy_id", privyId).single()
+  const { data: user, error: userError } = await supabase.from("users").select("id").eq("wallet_address", wallet_address).single()
 
   if (userError || !user) {
     throw new Error("User not found")
@@ -518,11 +518,11 @@ export async function voteOnProposal(proposalId: string, vote: "yes" | "no" | "a
 }
 
 // Get all pools for a user
-export async function getUserPools(privyId: string) {
+export async function getUserPools(wallet_address: string) {
   const supabase = createServerSupabaseClient()
 
   // Get the user from Supabase
-  const { data: user, error: userError } = await supabase.from("users").select("id").eq("privy_id", privyId).single()
+  const { data: user, error: userError } = await supabase.from("users").select("id").eq("wallet_address", wallet_address).single()
 
   if (userError || !user) {
     throw new Error("User not found")
@@ -557,11 +557,11 @@ export async function getUserPools(privyId: string) {
 }
 
 // Get detailed pool information
-export async function getPoolDetails(poolId: string, privyId: string) {
+export async function getPoolDetails(poolId: string, wallet_address: string) {
   const supabase = createServerSupabaseClient()
 
   // Get the user from Supabase
-  const { data: user, error: userError } = await supabase.from("users").select("id").eq("privy_id", privyId).single()
+  const { data: user, error: userError } = await supabase.from("users").select("id").eq("wallet_address", wallet_address).single()
 
   if (userError || !user) {
     throw new Error("User not found")
@@ -580,11 +580,11 @@ export async function getPoolDetails(poolId: string, privyId: string) {
     .from("pools")
     .select(`
       *,
-      creator:creator_id(id, privy_id, display_name, wallet_address, avatar_url),
-      next_payout_member:next_payout_member_id(id, privy_id, display_name, wallet_address, avatar_url),
+      creator:creator_id(id, wallet_address, display_name, wallet_address, avatar_url),
+      next_payout_member:next_payout_member_id(id, wallet_address, display_name, wallet_address, avatar_url),
       pool_members(
         *,
-        user:user_id(id, privy_id, display_name, wallet_address, avatar_url)
+        user:user_id(id, wallet_address, display_name, wallet_address, avatar_url)
       )
     `)
     .eq("id", poolId)
@@ -631,11 +631,11 @@ export async function getPoolDetails(poolId: string, privyId: string) {
 }
 
 // Execute a proposal that has passed
-export async function executeProposal(proposalId: string, privyId: string) {
+export async function executeProposal(proposalId: string, wallet_address: string) {
   const supabase = createServerSupabaseClient()
 
   // Get the user from Supabase
-  const { data: user, error: userError } = await supabase.from("users").select("id").eq("privy_id", privyId).single()
+  const { data: user, error: userError } = await supabase.from("users").select("id").eq("wallet_address", wallet_address).single()
 
   if (userError || !user) {
     throw new Error("User not found")

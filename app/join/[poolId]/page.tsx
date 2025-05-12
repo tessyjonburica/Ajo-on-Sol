@@ -3,19 +3,19 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { usePrivy } from "@/lib/privy"
-import { usePoolDetails } from "@/lib/solana"
+import { useWallet } from '@solana/wallet-adapter-react'
+import { usePoolDetails } from '@/lib/solana'
 import { ArrowLeft, X, Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { joinPool } from "@/lib/api"
+import { joinPool } from "@/lib/pools/actions"
 import Link from "next/link"
 
 export default function JoinPoolPage({ params }: { params: { poolId: string } }) {
   const router = useRouter()
-  const { user, isAuthenticated, isLoading: isLoadingAuth, login } = usePrivy()
+  const { publicKey, connected } = useWallet()
   const { pool, isLoading: isLoadingPool, error: poolError } = usePoolDetails(params.poolId)
 
   const [isJoining, setIsJoining] = useState(false)
@@ -23,12 +23,7 @@ export default function JoinPoolPage({ params }: { params: { poolId: string } })
   const [success, setSuccess] = useState<string | null>(null)
 
   const handleJoin = async () => {
-    if (!isAuthenticated) {
-      await login()
-      return
-    }
-
-    if (!user?.wallet.address) {
+    if (!connected || !publicKey) {
       setError("Please connect your wallet to join")
       return
     }
@@ -37,7 +32,7 @@ export default function JoinPoolPage({ params }: { params: { poolId: string } })
     setError(null)
 
     try {
-      await joinPool(params.poolId, user.wallet.address)
+      await joinPool(params.poolId, publicKey.toBase58())
       setSuccess("Successfully joined the pool!")
 
       // Redirect to dashboard after successful join
@@ -51,7 +46,7 @@ export default function JoinPoolPage({ params }: { params: { poolId: string } })
     }
   }
 
-  if (isLoadingAuth || isLoadingPool) {
+  if (isLoadingPool) {
     return (
       <div className="container flex min-h-[70vh] items-center justify-center px-4 py-8 md:px-6">
         <Card className="w-full max-w-md">
