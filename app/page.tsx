@@ -129,7 +129,7 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] overflow-hidden bg-gradient-to-b from-purple-50 via-purple-50/50 to-white pt-16 dark:from-purple-950/30 dark:via-purple-950/20 dark:to-background">
+      <section className="relative min-h-[90vh] overflow-hidden bg-gradient-to-b from-purple-50 via-purple-50/50 to-white pt-10 dark:from-purple-950/30 dark:via-purple-950/20 dark:to-background">
         <div className="container relative z-10 px-4 py-16 sm:px-6 sm:py-24 lg:py-32">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-8">
             <div className="flex flex-col justify-center">
@@ -445,11 +445,11 @@ export default function Home() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10 h-14 px-8 text-lg"
-                >
-                  <Link href="#how-it-works">
-                    Learn More
-                    <ChevronRight className="ml-2 h-5 w-5" />
+                  className="border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition duration-200 h-14 px-8 text-lg"
+                  >
+                  <Link href="#how-it-works" className="flex items-center gap-2">
+                      Learn More
+                    <ChevronRight className="h-5 w-5" />
                   </Link>
                 </Button>
               </div>
