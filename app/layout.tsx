@@ -11,7 +11,6 @@ const inter = Inter({ subsets: ["latin"] }) // Correct usage for next/font/googl
 export const metadata: Metadata = {
   title: "Ajo on Sol | Community Savings on Solana",
   description: "A decentralized savings pool dApp inspired by the traditional Nigerian 'ajo' system, built on Solana.",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({

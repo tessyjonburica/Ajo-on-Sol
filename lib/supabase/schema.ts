@@ -14,7 +14,7 @@ export interface Database {
           creator_id: string
           start_date: string
           end_date: string | null
-          frequency: "daily" | "weekly" | "biweekly" | "monthly"
+          frequency: "weekly" | "biweekly" | "monthly"
           contribution_amount: number
           contribution_token: string
           contribution_token_symbol: string
