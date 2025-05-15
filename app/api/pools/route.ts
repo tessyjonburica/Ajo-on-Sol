@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
         name: body.name,
         description: body.description,
         creator_id: user.id,
+        creator: walletAddress,
         contribution_amount: body.contributionAmount,
         contribution_token: body.contributionToken,
         contribution_token_symbol: body.contributionTokenSymbol,
@@ -172,13 +173,18 @@ export async function POST(request: NextRequest) {
       const { error: updateError } = await supabase
         .from("pools")
         .update({
-          solana_address: poolAddress,
+          pool_address: poolAddress,
+          creator: walletAddress,
           // We don't have a txSignature yet - that will come after the user signs
         })
         .eq("id", pool.id)
 
       if (updateError) {
         console.error("Failed to update pool with blockchain info:", updateError)
+        return NextResponse.json({ 
+          error: "Failed to update pool with blockchain info", 
+          details: updateError.message 
+        }, { status: 500 })
       }
 
       // Return the transaction for frontend signing

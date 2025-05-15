@@ -196,3 +196,28 @@ export async function verifyPoolStatus(poolAddress: string, walletAddress?: stri
     throw error
   }
 }
+
+/**
+ * Submit a contribution to a pool
+ */
+export async function contributeToPool(poolId: string, amount: number, tokenSymbol: string) {
+  const response = await fetch(`/api/pools/${poolId}/contribute`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      amount,
+      tokenSymbol
+    }),
+  });
+  
+  const json = await response.json();
+  
+  if (!response.ok) {
+    console.error('Error contributing to pool:', json);
+    throw new Error(json.error || 'Failed to process contribution');
+  }
+  
+  return json;
+}

@@ -169,7 +169,7 @@ export default function DashboardPage() {
                 <div className="text-2xl font-bold">
                   {formatCurrency(
                     pools.reduce((sum, pool) => sum + pool.totalContributed, 0),
-                    "USDC",
+                    "SOL",
                   )}
                 </div>
               )}

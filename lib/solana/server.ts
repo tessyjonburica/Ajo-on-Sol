@@ -9,7 +9,7 @@ import minimalIdl from "./minimal-ajo-idl.json"
 const PROGRAM_ID = new PublicKey("EiKhShgBVKz8bNY4eqAxQByS6CvsCeKVavxFhba38QFk")
 
 // Get connection to Solana
-const getConnection = () => {
+export const getConnection = () => {
   return new Connection(
     process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.devnet.solana.com",
     "confirmed"

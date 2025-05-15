@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator"
 import { CalendarDays, Users, Wallet as WalletIcon } from "lucide-react"
 import FeeBreakdown from "@/components/FeeBreakdown"
 import PoolSettings from "@/components/PoolSettings"
+import ContributeForm from "./ContributeForm"
 
 export default function PoolDetailsContent({ pool }: { pool: any }) {
   const { publicKey } = useWallet()
@@ -175,7 +176,14 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
                 </TabsContent>
 
                 <TabsContent value="contributions" className="mt-4">
-                  <ContributionPanel pool={pool} />
+                  <div className="mt-6">
+                    <ContributeForm 
+                      poolId={pool.id}
+                      contributionAmount={pool.contributionAmount}
+                      contributionToken={pool.contributionToken}
+                      contributionTokenSymbol={pool.contributionTokenSymbol}
+                    />
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="payouts" className="mt-4">
