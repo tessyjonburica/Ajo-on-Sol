@@ -59,6 +59,8 @@ export async function getPoolById(poolId: string) {
     currentYield: data.current_yield,
     status: data.status,
     slug: data.slug,
+    solana_address: data.solana_address,
+    solana_tx_signature: data.solana_tx_signature
   };
 }
 
@@ -104,6 +106,7 @@ export async function getUserVoteOnProposal(proposalId: string, userId: string) 
 
 /**
  * Creates a new pool by calling the /api/pools endpoint
+ * Now returns both the pool data and the transaction that needs to be signed
  */
 export async function createPool(poolData: any) {
   const response = await fetch('/api/pools', {
@@ -113,12 +116,45 @@ export async function createPool(poolData: any) {
     },
     body: JSON.stringify(poolData),
   });
+  
   const json = await response.json();
+  
   if (!response.ok) {
     console.error('Error creating pool via API:', json);
     throw new Error(json.error || 'Failed to create pool');
   }
-  return json.pool;
+  
+  // Return both the pool and the transaction (if available)
+  return {
+    pool: json.pool,
+    transaction: json.transaction,
+    poolAddress: json.poolAddress
+  };
+}
+
+/**
+ * Submit a signed transaction to complete pool creation
+ */
+export async function submitPoolTransaction(poolId: string, signedTransaction: string) {
+  const response = await fetch('/api/transactions/submit', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      poolId,
+      signedTransaction,
+    }),
+  });
+  
+  const json = await response.json();
+  
+  if (!response.ok) {
+    console.error('Error submitting transaction:', json);
+    throw new Error(json.error || 'Failed to submit transaction');
+  }
+  
+  return json;
 }
 
 /**
@@ -139,4 +175,24 @@ export async function voteOnProposal(poolId: string, proposalId: string, walletA
     throw new Error(json.error || 'Failed to vote on proposal');
   }
   return json;
+}
+
+// Add a function to verify pool status and wallet balance
+export async function verifyPoolStatus(poolAddress: string, walletAddress?: string) {
+  try {
+    let url = `/api/pools/verify?poolAddress=${poolAddress}`
+    if (walletAddress) {
+      url += `&walletAddress=${walletAddress}`
+    }
+    
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Failed to verify pool: ${response.statusText}`)
+    }
+    
+    return await response.json()
+  } catch (error) {
+    console.error("Error verifying pool status:", error)
+    throw error
+  }
 }

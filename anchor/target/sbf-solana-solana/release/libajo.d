@@ -1,0 +1,1 @@
+/Users/favourolaboye/project/ajo/target/sbf-solana-solana/release/libajo.rlib: /Users/favourolaboye/project/ajo/programs/ajo/src/error.rs /Users/favourolaboye/project/ajo/programs/ajo/src/lib.rs /Users/favourolaboye/project/ajo/programs/ajo/src/state.rs

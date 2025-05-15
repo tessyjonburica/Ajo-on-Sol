@@ -45,13 +45,33 @@ export default function DashboardPage() {
       }
       setUserLoading(true)
       console.log('Dashboard: Fetching user from Supabase with wallet address', walletAddress)
-      const { data, error } = await supabase.from("users").select("*").eq("wallet_address", walletAddress).maybeSingle()
+      // Try to fetch user by wallet address
+      let { data: userData, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("wallet_address", walletAddress)
+        .maybeSingle()
       if (error) {
         console.error('Dashboard: Error fetching user from Supabase:', error)
-      } else {
-        console.log('Dashboard: User data from Supabase:', data)
       }
-      setUser(data)
+      // If no user exists, create one automatically
+      if (!userData) {
+        console.log('Dashboard: No user found, creating new user for', walletAddress)
+        const { data: newUser, error: insertError } = await supabase
+          .from("users")
+          .upsert({ wallet_address: walletAddress }, { onConflict: 'wallet_address' })
+          .select()
+          .maybeSingle()
+        if (insertError) {
+          console.error('Dashboard: Error creating user in Supabase:', insertError)
+        } else {
+          console.log('Dashboard: Created new user in Supabase:', newUser)
+          userData = newUser
+        }
+      } else {
+        console.log('Dashboard: User data from Supabase:', userData)
+      }
+      setUser(userData)
       setUserLoading(false)
     }
     fetchUser()

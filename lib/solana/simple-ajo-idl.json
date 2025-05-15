@@ -1,0 +1,371 @@
+{
+  "version": "0.1.0",
+  "name": "ajo",
+  "instructions": [
+    {
+      "name": "createPool",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "member",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "creator",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "poolId",
+          "type": "u64"
+        },
+        {
+          "name": "currency",
+          "type": {
+            "defined": "currencyType"
+          }
+        },
+        {
+          "name": "contributionAmount",
+          "type": "u64"
+        },
+        {
+          "name": "totalMembers",
+          "type": "u8"
+        },
+        {
+          "name": "totalCycles",
+          "type": "u8"
+        },
+        {
+          "name": "cyclePeriod",
+          "type": {
+            "defined": "cyclePeriod"
+          }
+        },
+        {
+          "name": "creatorPosition",
+          "type": "u8"
+        },
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "executePayout",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipient",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipientWallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vaultToken",
+          "isMut": true,
+          "isSigner": false,
+          "optional": true
+        },
+        {
+          "name": "recipientToken",
+          "isMut": true,
+          "isSigner": false,
+          "optional": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "joinPool",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "member",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "payoutPosition",
+          "type": "u8"
+        },
+        {
+          "name": "questionnaireAnswers",
+          "type": {
+            "vec": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "makeContribution",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "member",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userToken",
+          "isMut": true,
+          "isSigner": false,
+          "optional": true
+        },
+        {
+          "name": "vaultToken",
+          "isMut": true,
+          "isSigner": false,
+          "optional": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "optional": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "memberAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "hasCollected",
+            "type": "bool"
+          },
+          {
+            "name": "contributionsMade",
+            "type": "u8"
+          },
+          {
+            "name": "payoutPosition",
+            "type": "u8"
+          },
+          {
+            "name": "questionnaireAnswers",
+            "type": {
+              "vec": "string"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "vaultAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "currencyType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "sol"
+          },
+          {
+            "name": "usdc"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cyclePeriod",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "weekly"
+          },
+          {
+            "name": "monthly"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "PoolFull",
+      "msg": "Pool is already full"
+    },
+    {
+      "code": 6001,
+      "name": "MemberExists",
+      "msg": "Member already exists in pool"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidContribution",
+      "msg": "Invalid contribution amount"
+    },
+    {
+      "code": 6003,
+      "name": "MemberNotFound",
+      "msg": "Member not found"
+    },
+    {
+      "code": 6004,
+      "name": "PoolNotActive",
+      "msg": "Pool not active"
+    },
+    {
+      "code": 6005,
+      "name": "PoolActive",
+      "msg": "Pool is already active"
+    },
+    {
+      "code": 6006,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidPoolSize",
+      "msg": "Invalid pool size - must be between 2 and 10 members"
+    },
+    {
+      "code": 6008,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds for contribution"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidPayoutRecipient",
+      "msg": "Invalid payout recipient"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidCyclePeriod",
+      "msg": "Invalid cycle period or total cycles"
+    },
+    {
+      "code": 6011,
+      "name": "ContributionAlreadyMade",
+      "msg": "Contribution already made for this cycle"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidPayoutPosition",
+      "msg": "Invalid payout position - must be between 1 and total members"
+    },
+    {
+      "code": 6013,
+      "name": "PayoutPositionTaken",
+      "msg": "Payout position already taken"
+    }
+  ]
+}

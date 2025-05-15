@@ -1,3 +1,8 @@
+-- Drop existing procedures if they exist (to avoid conflicts when re-running)
+DROP FUNCTION IF EXISTS join_pool_transaction(UUID, UUID, INT);
+DROP FUNCTION IF EXISTS process_payout_transaction(UUID, UUID, NUMERIC, TEXT);
+DROP FUNCTION IF EXISTS check_ended_proposals();
+
 -- Stored procedure for joining a pool with transaction safety
 CREATE OR REPLACE FUNCTION join_pool_transaction(
   p_pool_id UUID,
@@ -209,16 +214,41 @@ BEGIN
     -- Update the proposal status
     UPDATE proposals
     SET 
-      status = CASE WHEN has_passed THEN 'passed' ELSE 'rejected' END,
+      status = CASE WHEN has_passed THEN 'executed' ELSE 'rejected' END,
       updated_at = NOW()
     WHERE id = proposal_record.id;
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to create a new user with wallet address
+CREATE OR REPLACE FUNCTION create_or_get_user(
+  p_wallet_address TEXT
+)
+RETURNS UUID AS $$
+DECLARE
+  v_user_id UUID;
+BEGIN
+  -- Check if user exists
+  SELECT id INTO v_user_id
+  FROM users
+  WHERE wallet_address = p_wallet_address;
+  
+  -- If user doesn't exist, create one
+  IF v_user_id IS NULL THEN
+    INSERT INTO users (wallet_address)
+    VALUES (p_wallet_address)
+    RETURNING id INTO v_user_id;
+  END IF;
+  
+  RETURN v_user_id;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Create a cron job to check ended proposals every hour
-SELECT cron.schedule(
-  'check-ended-proposals',
-  '0 * * * *', -- Run every hour
-  'SELECT check_ended_proposals()'
-);
+-- Comment out if you're not using the pg_cron extension
+-- SELECT cron.schedule(
+--   'check-ended-proposals',
+--   '0 * * * *', -- Run every hour
+--   'SELECT check_ended_proposals()'
+-- );

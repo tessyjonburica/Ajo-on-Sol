@@ -36,6 +36,8 @@ export type Pool = {
   currentYield?: number
   status: "active" | "pending" | "completed"
   slug?: string
+  solana_address?: string | null
+  solana_tx_signature?: string | null
 }
 
 export type Transaction = {
@@ -125,8 +127,8 @@ export const usePools = (walletAddress?: string) => {
       try {
         setIsLoading(true)
 
-        // Fetch pools from the API
-        const response = await fetch("/api/pools")
+        // Fetch pools from the API, passing wallet address
+        const response = await fetch(`/api/pools?wallet_address=${walletAddress}`)
         if (!response.ok) {
           throw new Error("Failed to fetch pools")
         }
@@ -155,6 +157,8 @@ export const usePools = (walletAddress?: string) => {
           currentYield: pool.current_yield,
           status: pool.status,
           slug: pool.slug,
+          solana_address: pool.solana_address,
+          solana_tx_signature: pool.solana_tx_signature,
         }))
 
         setPools(transformedPools)
@@ -232,6 +236,8 @@ export const usePoolDetails = (poolId: string) => {
           currentYield: data.pool.current_yield,
           status: data.pool.status,
           slug: data.pool.slug,
+          solana_address: data.pool.solana_address,
+          solana_tx_signature: data.pool.solana_tx_signature,
         }
 
         setPool(transformedPool)
@@ -270,14 +276,41 @@ export const useTransactions = (walletAddress?: string) => {
 
   useEffect(() => {
     const fetchTransactions = async () => {
+      console.log("[useTransactions] Hook triggered. walletAddress:", walletAddress, "publicKey:", publicKey?.toBase58());
+
       if (!walletAddress || !publicKey) {
+        console.log("[useTransactions] Missing walletAddress or publicKey. Aborting.");
         setTransactions([])
         setIsLoading(false)
         return
       }
 
       try {
-        setIsLoading(true)
+        setIsLoading(true);
+        console.log(`[useTransactions] Attempting to fetch user ID for walletAddress: ${walletAddress}`);
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('wallet_address', walletAddress)
+          .maybeSingle();
+
+        if (userError) {
+          console.error(`[useTransactions] Error fetching user ID for ${walletAddress}:`, userError);
+          // On missing user, skip fetching transactions
+          setTransactions([]);
+          setIsLoading(false);
+          return;
+        }
+        if (!userData) {
+          console.log(`[useTransactions] No user found for walletAddress: ${walletAddress}. Skipping transactions.`);
+          setTransactions([]);
+          setIsLoading(false);
+          return;
+        }
+        console.log(`[useTransactions] Successfully fetched user ID: ${userData.id} for walletAddress: ${walletAddress}`);
+        
+        // Proceed to fetch contributions and payouts even if user ID fetch had issues, to see original errors.
+        console.log("[useTransactions] Proceeding to fetch contributions and payouts.");
 
         // Fetch both contributions and payouts
         const [contributionsRes, payoutsRes] = await Promise.all([
@@ -293,10 +326,9 @@ export const useTransactions = (walletAddress?: string) => {
               transaction_signature,
               status,
               created_at,
-              users!contributions_user_id_fkey(wallet_address),
               pools(id, name)
             `)
-            .eq("users.wallet_address", walletAddress)
+            .eq('user_id', userData.id)
             .order("created_at", { ascending: false }),
 
           supabase
@@ -311,10 +343,9 @@ export const useTransactions = (walletAddress?: string) => {
               transaction_signature,
               status,
               payout_date,
-              users!payouts_recipient_id_fkey(wallet_address),
               pools(id, name)
             `)
-            .eq("users.wallet_address", walletAddress)
+            .eq('recipient_id', userData.id)
             .order("payout_date", { ascending: false }),
         ])
 
@@ -329,8 +360,8 @@ export const useTransactions = (walletAddress?: string) => {
           amount: c.amount,
           token: c.token,
           tokenSymbol: c.token_symbol,
-          sender: c.users?.wallet_address || "",
-          recipient: c.pool_id,
+          sender: walletAddress!,
+          recipient: c.pools?.name || c.pool_id,
           timestamp: new Date(c.created_at),
           status: c.status,
           signature: c.transaction_signature,
@@ -344,8 +375,8 @@ export const useTransactions = (walletAddress?: string) => {
           amount: p.amount,
           token: p.token,
           tokenSymbol: p.token_symbol,
-          sender: p.pool_id,
-          recipient: p.users?.wallet_address || "",
+          sender: p.pools?.name || p.pool_id,
+          recipient: walletAddress!,
           timestamp: new Date(p.payout_date),
           status: p.status,
           signature: p.transaction_signature,

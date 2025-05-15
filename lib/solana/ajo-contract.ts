@@ -2,11 +2,11 @@ import * as anchor from "@project-serum/anchor"
 import { AnchorProvider, Program } from "@project-serum/anchor"
 import { type Connection, PublicKey, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import type { AnchorWallet } from "@solana/wallet-adapter-react"
-import * as ajoIdl from "./ajo-idl.json"
+import * as ajoIdl from "./fixed-ajo-idl.json"
 const IDL = ajoIdl as anchor.Idl
 
 // The program ID from the IDL
-export const PROGRAM_ID = new PublicKey("AJo5dkPALcNU7YpYCvyV2k1wJCpNU9uEuTkwJ2Uvp9TP")
+export const PROGRAM_ID = new PublicKey("EiKhShgBVKz8bNY4eqAxQByS6CvsCeKVavxFhba38QFk")
 
 // Helper function to create a provider
 export const getProvider = (connection: Connection, wallet: AnchorWallet) => {
@@ -267,4 +267,28 @@ export const getVoteAccountData = async (provider: AnchorProvider, voteAccount: 
   const program = getProgram(provider)
   const accountData = await program.account.voteAccount.fetch(voteAccount)
   return accountData
+}
+
+// Emergency withdrawal from a pool
+export const withdrawFromAjoPool = async (
+  poolAddress: string,
+  walletAddress: string,
+  amount: number
+) => {
+  try {
+    // This function should be called from the client-side
+    // We need to get provider from client-side
+    // Here we're assuming this function will be used with useAjoContract hook
+    
+    // For client-side implementation, this would be:
+    // const provider = getProvider() - obtained from the client context
+    // const ajoAccount = new PublicKey(poolAddress)
+    // const recipient = new PublicKey(walletAddress)
+    // return await emergencyWithdrawal(provider, ajoAccount, recipient, amount)
+    
+    throw new Error("This function should be called from the client-side with a wallet context")
+  } catch (error) {
+    console.error("Error withdrawing from pool:", error)
+    throw error
+  }
 }

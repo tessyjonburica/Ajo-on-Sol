@@ -1,0 +1,1 @@
+{"rustc":4950376045334954125,"features":"","declared_features":"","target":0,"profile":0,"path":0,"deps":[[10791833957791020630,"build_script_build",false,12492766749920003388]],"local":[{"RerunIfChanged":{"output":"debug/build/ahash-f3e1ec1b5b8c6f47/output","paths":["build.rs"]}}],"rustflags":["--cfg","procmacro2_semver_exempt"],"config":0,"compile_kind":0}

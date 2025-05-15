@@ -25,6 +25,8 @@ export interface Database {
           next_payout_member_id: string | null
           yield_enabled: boolean
           status: "pending" | "active" | "completed" | "cancelled"
+          solana_address: string | null
+          solana_tx_signature: string | null
         }
         Insert: {
           id?: string
@@ -47,6 +49,8 @@ export interface Database {
           next_payout_member_id?: string | null
           yield_enabled?: boolean
           status?: "pending" | "active" | "completed" | "cancelled"
+          solana_address?: string | null
+          solana_tx_signature?: string | null
         }
         Update: {
           id?: string
@@ -69,6 +73,8 @@ export interface Database {
           next_payout_member_id?: string | null
           yield_enabled?: boolean
           status?: "pending" | "active" | "completed" | "cancelled"
+          solana_address?: string | null
+          solana_tx_signature?: string | null
         }
       }
       pool_members: {
@@ -307,27 +313,27 @@ export interface Database {
           id: string
           created_at: string
           updated_at: string
-          privy_id: string
+          privy_id: string | null
           display_name: string | null
-          wallet_address: string | null
+          wallet_address: string
           avatar_url: string | null
         }
         Insert: {
           id?: string
           created_at?: string
           updated_at?: string
-          privy_id: string
+          privy_id?: string | null
           display_name?: string | null
-          wallet_address?: string | null
+          wallet_address: string
           avatar_url?: string | null
         }
         Update: {
           id?: string
           created_at?: string
           updated_at?: string
-          privy_id?: string
+          privy_id?: string | null
           display_name?: string | null
-          wallet_address?: string | null
+          wallet_address?: string
           avatar_url?: string | null
         }
       }

@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useWallet } from '@solana/wallet-adapter-react'
-import { withdrawFromAjoPool } from "@/lib/solana/ajo-contract"
+import { PublicKey } from "@solana/web3.js"
+import { useAjoContract } from "@/lib/solana/hooks"
 import type { Pool } from "@/lib/solana"
 import { formatCurrency } from "@/lib/utils"
 import { AlertTriangle, Check, Loader2, LogOut, X } from "lucide-react"
@@ -28,6 +29,7 @@ interface WithdrawButtonProps {
 
 export default function WithdrawButton({ pool, onSuccess }: WithdrawButtonProps) {
   const { publicKey } = useWallet()
+  const { emergencyWithdraw } = useAjoContract()
 
   const [open, setOpen] = useState(false)
   const [amount, setAmount] = useState<string>("")
@@ -52,7 +54,18 @@ export default function WithdrawButton({ pool, onSuccess }: WithdrawButtonProps)
     setSuccess(null)
 
     try {
-      await withdrawFromAjoPool(pool.id, walletAddress, Number.parseFloat(amount))
+      // Check if we have the Solana pool address
+      if (pool.solana_address) {
+        // Use the Solana smart contract for withdrawal
+        await emergencyWithdraw(
+          pool.solana_address,
+          walletAddress,
+          Number.parseFloat(amount)
+        )
+      } else {
+        // Fallback to API call if no Solana address
+        throw new Error("This pool is not linked to a smart contract yet")
+      }
 
       setSuccess(`Successfully withdrew ${amount} ${pool.contributionTokenSymbol} from the pool`)
       setAmount("")

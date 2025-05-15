@@ -6,7 +6,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { useWallet } from '@solana/wallet-adapter-react'
-import { createPool } from "@/lib/api"
+import { Transaction } from '@solana/web3.js'
+import { createPool, submitPoolTransaction } from "@/lib/api"
 import { useTokenBalances } from "@/lib/solana"
 import { ArrowRight, Calendar, Check, ChevronsUpDown, DollarSign, Loader2, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -30,7 +31,7 @@ const frequencies = [
 
 export default function CreatePoolForm() {
   const router = useRouter()
-  const { publicKey, connected } = useWallet()
+  const { publicKey, connected, signTransaction } = useWallet()
   const { balances, isLoading: isLoadingTokens } = useTokenBalances()
 
   const [step, setStep] = useState(1)
@@ -186,16 +187,25 @@ export default function CreatePoolForm() {
       return
     }
 
+    if (isSubmitting) {
+      return // Prevent duplicate submissions
+    }
+
     setIsSubmitting(true)
     setErrorMessage(null)
+    setSuccessMessage(null)
 
     try {
+      if (!publicKey || !connected || !signTransaction) {
+        throw new Error("Wallet not connected")
+      }
+
       // Convert string values to appropriate types
       const poolData = {
         ...formData,
-        creator: publicKey ? publicKey.toBase58() : "",
-        members: [publicKey ? publicKey.toBase58() : ""],
-        wallet_address: publicKey ? publicKey.toBase58() : "",
+        creator: publicKey.toBase58(),
+        members: [publicKey.toBase58()],
+        wallet_address: publicKey.toBase58(),
         contributionAmount: Number.parseFloat(formData.contributionAmount),
         totalMembers: Number.parseInt(formData.totalMembers),
         startDate: new Date(formData.startDate),
@@ -203,16 +213,92 @@ export default function CreatePoolForm() {
         slug: generateSlug(formData.name),
       }
 
-      const newPool = await createPool(poolData)
-
-      // Redirect to dashboard after successful creation
-      router.push(`/pool/${newPool.id}/${generateSlug(formData.name)}`)
-    } catch (error) {
-      console.error("Error creating pool:", error)
-      setErrorMessage((error as Error).message || "Failed to create pool. Please try again.")
-      setShowConfirmation(false)
-    } finally {
+      // Step 1: Create the pool in the database and get the transaction
+      console.log("Creating pool in database...")
+      const result = await createPool(poolData)
+      
+      // If we have a transaction to sign, proceed with signing
+      if (result.transaction) {
+        try {
+          // Deserialize and sign the transaction
+          console.log("Deserializing transaction from base64...")
+          const transaction = Transaction.from(Buffer.from(result.transaction, 'base64'))
+          
+          console.log("Transaction state before signing:", {
+            signers: transaction.signatures.map(s => ({
+              publicKey: s.publicKey.toBase58(),
+              signature: s.signature ? 'present' : 'missing'
+            })),
+            recentBlockhash: transaction.recentBlockhash,
+            feePayer: transaction.feePayer?.toBase58()
+          })
+          
+          console.log("Requesting wallet signature...")
+          const signedTransaction = await signTransaction(transaction)
+          
+          console.log("Transaction state after signing:", {
+            signers: signedTransaction.signatures.map(s => ({
+              publicKey: s.publicKey.toBase58(),
+              signature: s.signature ? 'present' : 'missing'
+            })),
+            recentBlockhash: signedTransaction.recentBlockhash,
+            feePayer: signedTransaction.feePayer?.toBase58()
+          })
+          
+          // Serialize the signed transaction
+          const serializedTransaction = signedTransaction.serialize().toString('base64')
+          console.log("Serialized signed transaction (first 50 chars):", serializedTransaction.slice(0, 50) + "...")
+          
+          console.log("Submitting transaction to network...")
+          
+          try {
+            // Submit the signed transaction with retry logic handled on the server
+            const txResult = await submitPoolTransaction(result.pool.id, serializedTransaction)
+            
+            if (txResult.warning) {
+              console.log("Warning:", txResult.warning)
+              // Even with a warning, if we have a signature, show it
+              if (txResult.txSignature) {
+                setSuccessMessage(`Pool created successfully! Transaction: ${txResult.txSignature}`)
+              } else {
+                setSuccessMessage("Pool created successfully!")
+              }
+            } else {
+              setSuccessMessage(`Pool created successfully! Transaction: ${txResult.txSignature}`)
+            }
+            
+            // Redirect after a short delay
+            setTimeout(() => {
+              router.push(`/pool/${result.pool.id}/${generateSlug(formData.name)}`)
+            }, 2000)
+          } catch (submitError: any) {
+            console.error("Error submitting transaction:", submitError)
+            
+            // Check if the pool was actually created despite the error
+            if (submitError.message?.includes("already been processed")) {
+              setSuccessMessage("Pool creation succeeded! Redirecting...")
+              setTimeout(() => {
+                router.push(`/pool/${result.pool.id}/${generateSlug(formData.name)}`)
+              }, 2000)
+            } else {
+              throw submitError // Re-throw for the outer catch block
+            }
+          }
+        } catch (error: any) {
+          console.error("Transaction error:", error)
+          setErrorMessage(`Transaction failed: ${error.message || "Unknown error"}`)
+          setIsSubmitting(false)
+          setShowConfirmation(false)
+        }
+      } else {
+        // No transaction needed, redirect to the pool page
+        router.push(`/pool/${result.pool.id}/${generateSlug(formData.name)}`)
+      }
+    } catch (error: any) {
+      console.error("Error in pool creation:", error)
+      setErrorMessage(error.message || "Failed to create pool")
       setIsSubmitting(false)
+      setShowConfirmation(false)
     }
   }
 

@@ -1,0 +1,497 @@
+{
+  "address": "EiKhShgBVKz8bNY4eqAxQByS6CvsCeKVavxFhba38QFk",
+  "metadata": {
+    "name": "ajo",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "create_pool",
+      "discriminator": [
+        233,
+        146,
+        209,
+        142,
+        207,
+        104,
+        64,
+        188
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "arg",
+                "path": "pool_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              }
+            ]
+          }
+        },
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "pool_id",
+          "type": "u64"
+        },
+        {
+          "name": "currency",
+          "type": {
+            "defined": {
+              "name": "CurrencyType"
+            }
+          }
+        },
+        {
+          "name": "contribution_amount",
+          "type": "u64"
+        },
+        {
+          "name": "total_members",
+          "type": "u8"
+        },
+        {
+          "name": "total_cycles",
+          "type": "u8"
+        },
+        {
+          "name": "cycle_period",
+          "type": {
+            "defined": {
+              "name": "CyclePeriod"
+            }
+          }
+        },
+        {
+          "name": "creator_position",
+          "type": "u8"
+        },
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "execute_payout",
+      "discriminator": [
+        12,
+        35,
+        52,
+        7,
+        95,
+        19,
+        169,
+        21
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "recipient",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "recipient_wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipient_wallet",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "vault_token",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "recipient_token",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "token_program",
+          "optional": true,
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "join_pool",
+      "discriminator": [
+        14,
+        65,
+        62,
+        16,
+        116,
+        17,
+        195,
+        107
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "payout_position",
+          "type": "u8"
+        },
+        {
+          "name": "questionnaire_answers",
+          "type": {
+            "vec": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "make_contribution",
+      "discriminator": [
+        2,
+        33,
+        6,
+        104,
+        211,
+        177,
+        128,
+        109
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ]
+          }
+        },
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "user_token",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "vault_token",
+          "writable": true,
+          "optional": true
+        },
+        {
+          "name": "token_program",
+          "optional": true,
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "MemberAccount",
+      "discriminator": [
+        173,
+        25,
+        100,
+        97,
+        192,
+        177,
+        84,
+        139
+      ]
+    },
+    {
+      "name": "VaultAccount",
+      "discriminator": [
+        230,
+        251,
+        241,
+        83,
+        139,
+        202,
+        93,
+        28
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "PoolFull",
+      "msg": "Pool is already full"
+    },
+    {
+      "code": 6001,
+      "name": "MemberExists",
+      "msg": "Member already exists in pool"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidContribution",
+      "msg": "Invalid contribution amount"
+    },
+    {
+      "code": 6003,
+      "name": "MemberNotFound",
+      "msg": "Member not found"
+    },
+    {
+      "code": 6004,
+      "name": "PoolNotActive",
+      "msg": "Pool not active"
+    },
+    {
+      "code": 6005,
+      "name": "PoolActive",
+      "msg": "Pool is already active"
+    },
+    {
+      "code": 6006,
+      "name": "Unauthorized",
+      "msg": "Unauthorized"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidPoolSize",
+      "msg": "Invalid pool size - must be between 2 and 10 members"
+    },
+    {
+      "code": 6008,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds for contribution"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidPayoutRecipient",
+      "msg": "Invalid payout recipient"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidCyclePeriod",
+      "msg": "Invalid cycle period or total cycles"
+    },
+    {
+      "code": 6011,
+      "name": "ContributionAlreadyMade",
+      "msg": "Contribution already made for this cycle"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidPayoutPosition",
+      "msg": "Invalid payout position - must be between 1 and total members"
+    },
+    {
+      "code": 6013,
+      "name": "PayoutPositionTaken",
+      "msg": "Payout position already taken"
+    }
+  ],
+  "types": [
+    {
+      "name": "currencyType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "sol"
+          },
+          {
+            "name": "usdc"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cyclePeriod",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "weekly"
+          },
+          {
+            "name": "monthly"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/client"
+import { createPoolOnChain, preparePoolCreationTransaction } from "@/lib/solana/server"
+import { calculateCyclesFromDates } from "@/lib/utils/dates"
 
 export async function GET(request: NextRequest) {
   // Get wallet address from query param or header
@@ -85,10 +87,10 @@ export async function POST(request: NextRequest) {
     // If user does not exist, create one
     if (!user) {
       // Add a dummy privy_id for now to satisfy NOT NULL constraint
-      // const dummyPrivyId = `wallet:${walletAddress}`
+      const dummyPrivyId = `wallet:${walletAddress}`
       const { data: newUser, error: newUserError } = await supabase
         .from("users")
-        .insert({ wallet_address: walletAddress })
+        .insert({ wallet_address: walletAddress, privy_id: dummyPrivyId })
         .select("id")
         .single()
       if (newUserError || !newUser) {
@@ -98,7 +100,7 @@ export async function POST(request: NextRequest) {
       user = newUser
     }
 
-    // Create the pool
+    // Create the pool in Supabase
     const { data: pool, error: poolError } = await supabase
       .from("pools")
       .insert({
@@ -129,7 +131,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (poolError) {
-      return NextResponse.json({ error: "Failed to create pool" }, { status: 500 })
+      console.error("Failed to create pool in Supabase:", poolError)
+      return NextResponse.json({ error: "Failed to create pool", details: poolError.message }, { status: 500 })
     }
 
     // Add the creator as the first member
@@ -143,10 +146,57 @@ export async function POST(request: NextRequest) {
     })
 
     if (memberError) {
-      return NextResponse.json({ error: "Failed to add creator as member" }, { status: 500 })
+      console.error("Failed to add creator as member:", memberError)
+      return NextResponse.json({ error: "Failed to add creator as member", details: memberError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ pool })
+    // Now prepare a transaction for the frontend to sign
+    try {
+      // Calculate number of cycles based on start and end dates
+      const startDate = new Date(body.startDate)
+      const endDate = new Date(body.endDate)
+      const totalCycles = calculateCyclesFromDates(startDate, endDate, body.frequency)
+
+      // Prepare the transaction for frontend signing
+      const { transaction, poolAddress } = await preparePoolCreationTransaction(
+        body.name,
+        body.contributionAmount,
+        body.totalMembers,
+        totalCycles,
+        body.frequency === "weekly" ? "weekly" : "monthly", // Convert frequency to the format expected by the contract
+        1, // Creator position is 1 (first)
+        walletAddress
+      )
+
+      // Update the pool with the Solana address
+      const { error: updateError } = await supabase
+        .from("pools")
+        .update({
+          solana_address: poolAddress,
+          // We don't have a txSignature yet - that will come after the user signs
+        })
+        .eq("id", pool.id)
+
+      if (updateError) {
+        console.error("Failed to update pool with blockchain info:", updateError)
+      }
+
+      // Return the transaction for frontend signing
+      return NextResponse.json({ 
+        pool, 
+        transaction,
+        poolAddress
+      })
+      
+    } catch (chainError) {
+      console.error("Failed to prepare pool creation transaction:", chainError)
+      // Still return the pool data, but with an error message
+      return NextResponse.json({ 
+        pool,
+        error: "Failed to prepare blockchain transaction",
+        details: chainError instanceof Error ? chainError.message : String(chainError)
+      })
+    }
   } catch (error) {
     console.error("Error in POST /api/pools:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

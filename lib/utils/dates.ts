@@ -58,3 +58,33 @@ export function calculateNextPayoutDate(startDate: Date, frequency: "daily" | "w
     return `${hours}h`
   }
   
+  /**
+   * Calculate the number of cycles between two dates based on frequency
+   */
+  export function calculateCyclesFromDates(
+    startDate: Date,
+    endDate: Date,
+    frequency: "daily" | "weekly" | "biweekly" | "monthly"
+  ): number {
+    const diffTime = endDate.getTime() - startDate.getTime()
+    const diffDays = diffTime / (1000 * 60 * 60 * 24)
+    
+    switch (frequency) {
+      case "daily":
+        return Math.ceil(diffDays)
+      case "weekly":
+        return Math.ceil(diffDays / 7)
+      case "biweekly":
+        return Math.ceil(diffDays / 14)
+      case "monthly":
+        // Calculate months difference
+        let months = (endDate.getFullYear() - startDate.getFullYear()) * 12
+        months += endDate.getMonth() - startDate.getMonth()
+        // Add 1 if we're past the same day of the month
+        if (endDate.getDate() > startDate.getDate()) months += 1
+        return Math.max(1, months) // At least 1 cycle
+      default:
+        return 1 // Default to 1 cycle
+    }
+  }
+  
