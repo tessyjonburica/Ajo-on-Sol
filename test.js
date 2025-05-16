@@ -102,6 +102,7 @@ async function test() {
     const tx = await program.methods
       .createPool(
         new anchor.BN(poolId),
+        console.log("Pool ID:", poolId),
         { sol: {} }, // Correct Anchor enum format for CurrencyType
         new anchor.BN(contributionAmountLamports),
         5, // totalMembers
