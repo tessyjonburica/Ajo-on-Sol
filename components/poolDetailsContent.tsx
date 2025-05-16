@@ -1,7 +1,7 @@
 "use client"
 // @ts-nocheck
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 // import type { Pool } from "@/lib/api"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -32,6 +32,24 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
   const isMember = isPoolMember(userAddress, pool)
   const isAdmin = isPoolCreator(userAddress, pool)
 
+  // Debug logging
+  useEffect(() => {
+    console.log('PoolDetailsContent Debug:', {
+      poolId: pool.id,
+      poolAddress: pool.pool_address,
+      userAddress,
+      isMember,
+      isAdmin,
+      userPosition: pool.userPosition,
+      currentMembers: pool.currentMembers,
+      totalMembers: pool.totalMembers,
+      walletMatches: userAddress === "G7urqd6itSc13jqrygvUWCd8cj8SUm5tvSdef3FyydFT",
+      creator: pool.creator,
+      isCreator: pool.creator === userAddress,
+      members: pool.members
+    });
+  }, [pool, userAddress, isMember, isAdmin]);
+
   // Calculate total expected contribution based on frequency
   const startDate = new Date(pool.startDate)
   const endDate = new Date(pool.endDate)
@@ -39,7 +57,7 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
   const totalWeeks = Math.ceil((endDate.getTime() - startDate.getTime()) / msPerWeek)
   
   const totalContributed = parseFloat((pool.totalContributed || 0).toFixed(2))
-  const weeklyContribution = pool.contributionAmount * (pool.maxMembers || 1)
+  const weeklyContribution = pool.contributionAmount * (pool.totalMembers || 1)
   let targetAmount = 0
   
   if (pool.frequency === "weekly") {
@@ -47,7 +65,7 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
   } else if (pool.frequency === "monthly") {
     targetAmount = weeklyContribution * (totalWeeks / 4) // For monthly, divide weeks by 4
   } else if (pool.frequency === "daily") {
-    targetAmount = (pool.contributionAmount * (pool.maxMembers || 1)) * Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    targetAmount = (pool.contributionAmount * (pool.totalMembers || 1)) * Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
   } else {
     targetAmount = weeklyContribution * (totalWeeks / 2) // For biweekly
   }
@@ -220,13 +238,15 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
                   <div className="space-y-4">
                     <PayoutForm 
                       poolId={pool.id}
-                      poolAddress={pool.pool_address}
+                      poolAddress={pool.solana_address}
                       contributionAmount={pool.contributionAmount}
                       nextPayoutDate={pool.nextPayoutDate}
                       tokenSymbol={pool.contributionTokenSymbol || 'SOL'}
                       userPosition={pool.userPosition}
                       startDate={pool.startDate}
                       frequency={pool.frequency}
+                      currentMembers={pool.currentMembers}
+                      totalMembers={pool.totalMembers}
                     />
                   </div>
                 </TabsContent>
@@ -256,7 +276,7 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
                     <div>
                       <h3 className="text-sm font-medium">Your Position</h3>
                       <p className="text-sm text-muted-foreground">
-                        {pool.userPosition ? `${pool.userPosition} of ${pool.maxMembers}` : "Not determined yet"}
+                        {pool.userPosition ? `${pool.userPosition} of ${pool.totalMembers}` : "Not determined yet"}
                       </p>
                     </div>
 

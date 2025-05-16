@@ -74,7 +74,7 @@ const getProgram = async (): Promise<Program> => {
   
   const cyclePeriod = idlData.types?.find(t => t.name === "cyclePeriod")
   console.log("CyclePeriod:", cyclePeriod)
-  
+
   return new Program(idlData, PROGRAM_ID, provider)
 }
 

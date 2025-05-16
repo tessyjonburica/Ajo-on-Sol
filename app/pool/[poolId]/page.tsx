@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useWallet } from '@solana/wallet-adapter-react'
@@ -58,6 +58,8 @@ export default function PoolDetailsPage({ params }: { params: { poolId: string }
   const [copied, setCopied] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showPremiumModal, setShowPremiumModal] = useState(false)
+  const [userPosition, setUserPosition] = useState<number | null>(null)
+  const [isLoadingPosition, setIsLoadingPosition] = useState(false)
 
   // Filter transactions for this pool
   const poolTransactions = transactions.filter((tx) => tx.poolId === params.poolId)
@@ -66,6 +68,31 @@ export default function PoolDetailsPage({ params }: { params: { poolId: string }
   const isCreator = pool && walletAddress ? isPoolCreator(walletAddress, pool) : false
   const isMember = pool && walletAddress ? isPoolMember(walletAddress, pool) : false
   const isPremium = pool ? isPremiumPool(pool.id) : false
+
+  // Fetch user position
+  useEffect(() => {
+    async function fetchUserPosition() {
+      if (!publicKey || !params.poolId) return;
+      
+      setIsLoadingPosition(true);
+      try {
+        const response = await fetch(`/api/pools/${params.poolId}/user-position?wallet_address=${publicKey.toString()}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('User position API response:', data);
+          if (data.position) {
+            setUserPosition(data.position);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching user position:', err);
+      } finally {
+        setIsLoadingPosition(false);
+      }
+    }
+    
+    fetchUserPosition();
+  }, [params.poolId, publicKey]);
 
   // Load proposals
   useState(() => {
@@ -103,6 +130,12 @@ export default function PoolDetailsPage({ params }: { params: { poolId: string }
     await new Promise((resolve) => setTimeout(resolve, 1000))
     setIsRefreshing(false)
   }
+
+  // Prepare the pool data with the correct userPosition
+  const poolWithPosition = pool ? {
+    ...pool,
+    userPosition: userPosition !== null ? userPosition : (pool.userPosition || null)
+  } : null;
 
   if (isLoadingPool) {
     return (
@@ -517,33 +550,61 @@ export default function PoolDetailsPage({ params }: { params: { poolId: string }
           </div>
 
           <div>
-            {isMember ? (
-              <ContributionPanel pool={pool} onSuccess={handleRefresh} />
-            ) : (
-              <Card className="border-border/50">
-                <CardHeader>
-                  <CardTitle>Join This Pool</CardTitle>
-                  <CardDescription>You need to join this pool to contribute</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center py-6 text-center">
-                  <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-900/30">
-                    <Users className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <h3 className="mt-4 text-lg font-medium">Not a Member</h3>
-                  <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-                    You need to join this savings pool before you can contribute or participate in votes.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button asChild className="w-full gap-2 bg-purple-600 hover:bg-purple-700">
-                    <Link href={`/join/${pool.id}`}>
-                      <Users className="h-4 w-4" />
-                      Join Pool
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            )}
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Status</CardTitle>
+                <CardDescription>Your membership details for this pool</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isLoadingPosition ? (
+                  <Skeleton className="h-20 w-full" />
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-1 rounded-lg border border-border p-3">
+                      <div className="text-sm text-muted-foreground">Your Position</div>
+                      <p className="font-medium">
+                        {userPosition !== null ? `${userPosition} of ${pool?.totalMembers || 0}` : 'Not determined'}
+                      </p>
+                    </div>
+                    
+                    <div className="flex flex-col gap-1 rounded-lg border border-border p-3">
+                      <div className="text-sm text-muted-foreground">Status</div>
+                      <p className="font-medium">
+                        {isCreator ? 'Creator' : (isMember ? 'Member' : 'Not a member')}
+                      </p>
+                    </div>
+                  </>
+                )}
+                
+                {isMember ? (
+                  <ContributionPanel pool={pool} onSuccess={handleRefresh} />
+                ) : (
+                  <Card className="border-border/50">
+                    <CardHeader>
+                      <CardTitle>Join This Pool</CardTitle>
+                      <CardDescription>You need to join this pool to contribute</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-center justify-center py-6 text-center">
+                      <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-900/30">
+                        <Users className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <h3 className="mt-4 text-lg font-medium">Not a Member</h3>
+                      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+                        You need to join this savings pool before you can contribute or participate in votes.
+                      </p>
+                    </CardContent>
+                    <CardFooter>
+                      <Button asChild className="w-full gap-2 bg-purple-600 hover:bg-purple-700">
+                        <Link href={`/join/${pool.id}`}>
+                          <Users className="h-4 w-4" />
+                          Join Pool
+                        </Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

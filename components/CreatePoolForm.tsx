@@ -216,7 +216,7 @@ export default function CreatePoolForm() {
       // Step 1: Create the pool in the database and get the transaction
       console.log("Creating pool in database...")
       const result = await createPool(poolData)
-      
+
       // If we have a transaction to sign, proceed with signing
       if (result.transaction) {
         try {
@@ -288,7 +288,7 @@ export default function CreatePoolForm() {
           console.error("Transaction error:", error)
           setErrorMessage(`Transaction failed: ${error.message || "Unknown error"}`)
           setIsSubmitting(false)
-          setShowConfirmation(false)
+      setShowConfirmation(false)
         }
       } else {
         // No transaction needed, redirect to the pool page
