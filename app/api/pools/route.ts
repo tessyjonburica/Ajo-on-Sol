@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/lib/supabase/client"
 import { createPoolOnChain, preparePoolCreationTransaction } from "@/lib/solana/server"
-import { calculateCyclesFromDates } from "@/lib/utils/dates"
+import { calculateCyclesFromDates, calculateNextPayoutDate } from "@/lib/utils/dates"
 
 export async function GET(request: NextRequest) {
   // Get wallet address from query param or header
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
         current_members: 1, // Creator is the first member
         start_date: body.startDate,
         end_date: body.endDate,
-        next_payout_date: body.startDate, // Initially set to start date
+        next_payout_date: calculateNextPayoutDate(new Date(body.startDate), body.frequency, 1).toISOString(), // Position 1 for creator
         next_payout_member_id: user.id, // Creator is the first to receive payout
         total_contributed: 0,
         yield_enabled: body.yieldEnabled || false,

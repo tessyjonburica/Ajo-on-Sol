@@ -42,6 +42,10 @@ import { copyToClipboard } from "@/lib/utils"
 import TransactionItem from "@/components/TransactionItem"
 import PoolSettings from "@/components/PoolSettings"
 
+// Enable dynamic rendering and disable caching to ensure fresh data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function PoolDetailsPage({ params }: { params: { poolId: string } }) {
   const { publicKey, connected } = useWallet()
   const { pool, isLoading: isLoadingPool, error: poolError } = usePoolDetails(params.poolId)

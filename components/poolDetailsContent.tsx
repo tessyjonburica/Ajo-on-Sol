@@ -21,6 +21,8 @@ import { CalendarDays, Users, Wallet as WalletIcon } from "lucide-react"
 import FeeBreakdown from "@/components/FeeBreakdown"
 import PoolSettings from "@/components/PoolSettings"
 import ContributeForm from "./ContributeForm"
+import PayoutForm from "@/components/PayoutForm"
+import PoolBalance from "@/components/PoolBalance"
 
 export default function PoolDetailsContent({ pool }: { pool: any }) {
   const { publicKey } = useWallet()
@@ -30,9 +32,32 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
   const isMember = isPoolMember(userAddress, pool)
   const isAdmin = isPoolCreator(userAddress, pool)
 
-  const totalContributed = pool.totalContributed || 0
-  const targetAmount = pool.contributionAmount * pool.maxMembers
-  const percentFunded = (totalContributed / targetAmount) * 100
+  // Calculate total expected contribution based on frequency
+  const startDate = new Date(pool.startDate)
+  const endDate = new Date(pool.endDate)
+  const msPerWeek = 1000 * 60 * 60 * 24 * 7
+  const totalWeeks = Math.ceil((endDate.getTime() - startDate.getTime()) / msPerWeek)
+  
+  const totalContributed = parseFloat((pool.totalContributed || 0).toFixed(2))
+  const weeklyContribution = pool.contributionAmount * (pool.maxMembers || 1)
+  let targetAmount = 0
+  
+  if (pool.frequency === "weekly") {
+    targetAmount = weeklyContribution * totalWeeks
+  } else if (pool.frequency === "monthly") {
+    targetAmount = weeklyContribution * (totalWeeks / 4) // For monthly, divide weeks by 4
+  } else if (pool.frequency === "daily") {
+    targetAmount = (pool.contributionAmount * (pool.maxMembers || 1)) * Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+  } else {
+    targetAmount = weeklyContribution * (totalWeeks / 2) // For biweekly
+  }
+  
+  // Format to 2 decimal places to avoid floating point issues
+  targetAmount = parseFloat(targetAmount.toFixed(2))
+  const percentFunded = targetAmount > 0 ? Math.round((totalContributed / targetAmount) * 100) : 0
+
+  // Format the funded text with proper token symbol and decimal places
+  const fundedText = `${totalContributed} ${pool.contributionTokenSymbol || 'SOL'} of ${targetAmount} ${pool.contributionTokenSymbol || 'SOL'} funded`
 
   const nextPayoutDate = new Date(pool.nextPayoutDate || Date.now())
   const daysUntilNextPayout = Math.ceil((nextPayoutDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
@@ -58,11 +83,9 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
                 <CardContent>
                   <div className="space-y-6">
                     <div>
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm text-muted-foreground">
-                          {formatCurrency(totalContributed)} of {formatCurrency(targetAmount)} funded
-                        </span>
-                        <span className="text-sm font-medium">{Math.round(percentFunded)}%</span>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>{fundedText}</span>
+                        <span>{percentFunded}%</span>
                       </div>
                       <Progress value={percentFunded} className="h-2" />
                     </div>
@@ -83,7 +106,7 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
                         <div>
                           <p className="text-sm font-medium">Members</p>
                           <p className="text-sm text-muted-foreground">
-                            {pool.members?.length || 0} of {pool.maxMembers}
+                            {pool.currentMembers || 0} of {pool.totalMembers || 0}
                           </p>
                         </div>
                       </div>
@@ -160,6 +183,13 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
                             <h3 className="text-sm font-medium">Privacy</h3>
                             <p className="text-sm text-muted-foreground">{pool.isPrivate ? "Private" : "Public"}</p>
                           </div>
+                          <div>
+                            <h3 className="text-sm font-medium">Pool Balance</h3>
+                            <PoolBalance 
+                              poolAddress={pool.pool_address} 
+                              tokenSymbol={pool.contributionTokenSymbol || 'SOL'} 
+                            />
+                          </div>
                         </div>
 
                         <Separator />
@@ -187,7 +217,18 @@ export default function PoolDetailsContent({ pool }: { pool: any }) {
                 </TabsContent>
 
                 <TabsContent value="payouts" className="mt-4">
-                  <div>Payouts tab coming soon.</div>
+                  <div className="space-y-4">
+                    <PayoutForm 
+                      poolId={pool.id}
+                      poolAddress={pool.pool_address}
+                      contributionAmount={pool.contributionAmount}
+                      nextPayoutDate={pool.nextPayoutDate}
+                      tokenSymbol={pool.contributionTokenSymbol || 'SOL'}
+                      userPosition={pool.userPosition}
+                      startDate={pool.startDate}
+                      frequency={pool.frequency}
+                    />
+                  </div>
                 </TabsContent>
 
                 {isAdmin && (

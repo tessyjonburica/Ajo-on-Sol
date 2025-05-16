@@ -104,16 +104,48 @@ export async function joinPool(poolId: string, wallet_address: string) {
     throw new Error("You are already a member of this pool")
   }
 
+  // Calculate the new member's position
+  const newPosition = pool.current_members + 1
+
+  console.log(`Adding member to pool ${poolId} at position ${newPosition}`)
+  
   // Start a transaction
   const { error: transactionError } = await supabase.rpc("join_pool_transaction", {
     p_pool_id: poolId,
     p_user_id: user.id,
-    p_position: pool.current_members + 1,
+    p_position: newPosition,
   })
 
   if (transactionError) {
     console.error("Error joining pool:", transactionError)
     throw transactionError
+  }
+
+  // If this is the second member (position 2), update the next payout date accordingly
+  if (newPosition === 2) {
+    // Calculate the correct payout date for the second position
+    const startDate = new Date(pool.start_date)
+    const correctPayoutDate = calculateNextPayoutDate(startDate, pool.frequency, 2)
+    
+    console.log(`Updating next payout date for second member:`)
+    console.log(`  - Pool frequency: ${pool.frequency}`)
+    console.log(`  - Position: ${newPosition}`)
+    console.log(`  - New payout date: ${correctPayoutDate.toISOString()}`)
+    
+    // Update the pool with the new payout date
+    const { error: updateError } = await supabase
+      .from("pools")
+      .update({
+        next_payout_member_id: user.id,
+        next_payout_date: correctPayoutDate.toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", poolId)
+    
+    if (updateError) {
+      console.error("Error updating pool payout date:", updateError)
+      // We won't throw here, as the member was still added successfully
+    }
   }
 
   revalidatePath("/dashboard")
