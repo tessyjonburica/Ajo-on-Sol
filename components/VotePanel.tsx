@@ -2,7 +2,22 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { voteOnProposal, type Proposal } from "@/lib/api"
+import { voteOnProposal } from "@/lib/api"
+// If Proposal is defined elsewhere, import it from the correct path, e.g.:
+// import type { Proposal } from "@/lib/types"
+// Or define it locally if needed:
+export interface Proposal {
+  id: string
+  poolId: string
+  title: string
+  description: string
+  proposer: string
+  createdAt: string | Date
+  endsAt: string | Date
+  status: "active" | "passed" | "rejected"
+  options: string[]
+  votes: Record<string, number>
+}
 import { formatDate, formatAddress } from "@/lib/utils"
 import { AlertCircle, Check, Clock, Loader2, ThumbsDown, ThumbsUp, Users, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -33,7 +48,9 @@ export default function VotePanel({ proposal, onVoteSuccess, walletAddress }: Vo
     { address: "Dv2c4dvAL4V7coZEbS6fMrSyMDMzRxKyuQGkzzKZ42Wu", name: "User 3", vote: "Reject", avatar: "B" },
   ]
 
-  const totalVotes = Object.values(proposal.votes).reduce((a, b) => a + b, 0)
+  const options = proposal.options || [];
+  const votes = proposal.votes || {};
+  const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0)
 
   // Auto-dismiss success/error messages
   useEffect(() => {
@@ -68,9 +85,7 @@ export default function VotePanel({ proposal, onVoteSuccess, walletAddress }: Vo
     setSuccess(null)
 
     try {
-      const vote = selectedOption === "Approve" ? "yes" : "no"
-      await voteOnProposal(proposal.poolId, proposal.id, walletAddress, vote)
-
+      await voteOnProposal(proposal.poolId, proposal.id, walletAddress, selectedOption)
       setSuccess("Your vote has been recorded successfully")
       if (onVoteSuccess) {
         onVoteSuccess()
@@ -84,7 +99,7 @@ export default function VotePanel({ proposal, onVoteSuccess, walletAddress }: Vo
 
   const getVotePercentage = (option: string) => {
     if (totalVotes === 0) return 0
-    return Math.round((proposal.votes[option] / totalVotes) * 100)
+    return Math.round((votes[option] / totalVotes) * 100)
   }
 
   const getStatusColor = () => {
@@ -119,7 +134,7 @@ export default function VotePanel({ proposal, onVoteSuccess, walletAddress }: Vo
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4 text-muted-foreground" />
-            <span>Created: {formatDate(proposal.createdAt)}</span>
+            <span>Created: {formatDate(new Date(proposal.createdAt))}</span>
           </div>
           {isActive && (
             <div className="flex items-center gap-1 text-purple-600">
@@ -139,7 +154,7 @@ export default function VotePanel({ proposal, onVoteSuccess, walletAddress }: Vo
             </Button>
           </div>
           <div className="space-y-3">
-            {proposal.options.map((option) => (
+            {options.map((option) => (
               <div key={option} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span>{option}</span>
@@ -147,7 +162,7 @@ export default function VotePanel({ proposal, onVoteSuccess, walletAddress }: Vo
                 </div>
                 <Progress value={getVotePercentage(option)} className="h-2" />
                 <p className="text-xs text-muted-foreground">
-                  {proposal.votes[option] || 0} vote{proposal.votes[option] !== 1 ? "s" : ""}
+                  {votes[option] || 0} vote{votes[option] !== 1 ? "s" : ""}
                 </p>
               </div>
             ))}
@@ -189,7 +204,7 @@ export default function VotePanel({ proposal, onVoteSuccess, walletAddress }: Vo
           <div className="rounded-md border border-border p-4">
             <h3 className="mb-3 text-sm font-medium">Cast Your Vote</h3>
             <RadioGroup value={selectedOption || ""} onValueChange={setSelectedOption} className="space-y-2">
-              {proposal.options.map((option) => (
+              {options.map((option) => (
                 <div key={option} className="flex items-center space-x-2">
                   <RadioGroupItem value={option} id={option} />
                   <Label htmlFor={option} className="cursor-pointer">
@@ -237,25 +252,19 @@ export default function VotePanel({ proposal, onVoteSuccess, walletAddress }: Vo
       {isActive && (
         <CardFooter>
           <div className="flex w-full gap-2">
-            <Button
-              variant="outline"
-              className="flex-1 gap-1"
-              onClick={() => setSelectedOption("Reject")}
-              data-selected={selectedOption === "Reject"}
-              disabled={isVoting}
-            >
-              <ThumbsDown className="h-4 w-4" />
-              <span>Reject</span>
-            </Button>
-            <Button
-              className="flex-1 gap-1 bg-purple-600 hover:bg-purple-700"
-              onClick={() => setSelectedOption("Approve")}
-              data-selected={selectedOption === "Approve"}
-              disabled={isVoting}
-            >
-              <ThumbsUp className="h-4 w-4" />
-              <span>Approve</span>
-            </Button>
+            {options.map((option, idx) => (
+              <Button
+                key={option}
+                variant={idx === 0 ? "outline" : "default"}
+                className={`flex-1 gap-1 ${idx === 1 ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+                onClick={() => setSelectedOption(option)}
+                data-selected={selectedOption === option}
+                disabled={isVoting}
+              >
+                {option === "Reject" ? <ThumbsDown className="h-4 w-4" /> : option === "Approve" ? <ThumbsUp className="h-4 w-4" /> : null}
+                <span>{option}</span>
+              </Button>
+            ))}
           </div>
         </CardFooter>
       )}

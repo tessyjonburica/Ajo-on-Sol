@@ -14,14 +14,21 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import VotePanel from "@/components/VotePanel"
+import type { Proposal } from "@/components/VotePanel"
 
 // Define Proposal type inline if not exported
-type Proposal = {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-};
+// type Proposal = {
+//   id: string
+//   poolId: string
+//   title: string
+//   description: string
+//   proposer: string
+//   createdAt: string | Date
+//   endsAt: string | Date
+//   status: "active" | "passed" | "rejected"
+//   options: string[]
+//   votes: Record<string, number>
+// }
 
 export default function VotePage({ params }: { params: { poolId: string } }) {
   const { wallet } = useWallet()
