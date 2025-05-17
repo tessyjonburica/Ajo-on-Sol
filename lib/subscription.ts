@@ -23,6 +23,21 @@ export const PREMIUM_POOL_FEATURES = [
   "Advanced voting mechanisms",
 ]
 
+export const FEATURE_DESCRIPTIONS: Record<string, string> = {
+  // User features
+  "Access to premium pools": "Join exclusive premium pools.",
+  "Reduced platform fees (20% discount)": "Pay 20% less in platform fees.",
+  "Lower penalties for late contributions": "Reduced penalties for late contributions.",
+  "Enhanced analytics dashboard": "Access advanced analytics and insights.",
+  "Priority customer support": "Get priority support from our team.",
+  // Pool features
+  "Yield farming integration with Marinade Finance": "Enable yield farming for higher returns.",
+  "Flexible governance rules": "Customize pool governance rules.",
+  "Larger pool size (up to 100 members)": "Increase your pool size up to 100 members.",
+  "Custom payout schedules": "Set custom payout schedules for your pool.",
+  "Advanced voting mechanisms": "Unlock advanced voting and governance features.",
+}
+
 /**
  * Check if a user has premium status
  * @param userAddress The wallet address of the user
@@ -88,7 +103,7 @@ export async function upgradePoolToPremium(poolId: string, userAddress: string):
  * @returns Boolean indicating if the feature is available
  */
 export function isFeatureAvailable(
-  feature: "yield_farming" | "large_pool" | "custom_governance" | "reduced_fees",
+  feature: "yield_farming" | "large_pool" | "custom_governance" | "custom_schedule" | "reduced_fees",
   userAddress?: string,
   poolId?: string,
 ): boolean {
@@ -96,11 +111,10 @@ export function isFeatureAvailable(
     case "yield_farming":
     case "large_pool":
     case "custom_governance":
-      // Pool premium features
+    case "custom_schedule": // treat as premium pool feature
       return poolId ? isPremiumPool(poolId) : false
 
     case "reduced_fees":
-      // User premium feature
       return userAddress ? isPremiumUser(userAddress) : false
 
     default:
@@ -121,4 +135,27 @@ export function getSubscriptionStatus(userAddress?: string, poolId?: string) {
     userPremiumPrice: USER_PREMIUM_MONTHLY_PRICE,
     poolPremiumPrice: POOL_PREMIUM_MONTHLY_PRICE,
   }
+}
+
+/**
+ * Get the features available for upgrade based on current status
+ * @param type The type of upgradeable entity ("user" or "pool")
+ * @param userAddress The user's wallet address (optional)
+ * @param poolId The pool ID (optional)
+ * @returns Array of feature strings available for upgrade
+ */
+export function getUpgradeableFeatures(
+  type: "user" | "pool",
+  userAddress?: string,
+  poolId?: string
+): string[] {
+  if (type === "user") {
+    if (userAddress && isPremiumUser(userAddress)) return []
+    return PREMIUM_USER_FEATURES
+  }
+  if (type === "pool") {
+    if (poolId && isPremiumPool(poolId)) return []
+    return PREMIUM_POOL_FEATURES
+  }
+  return []
 }

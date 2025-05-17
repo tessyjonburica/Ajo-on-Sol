@@ -5,14 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
-import {MotionWrapper} from "@/components/MotionWrapper";
-
+import { MotionWrapper } from "@/components/MotionWrapper"
 
 interface LockedFeatureBannerProps {
   title: string
   description?: string
   featureType: "user" | "pool"
-  feature?: PremiumFeature
+  feature?: "yield_farming" | "large_pool" | "custom_schedule" // <-- add this line
   onUpgrade?: () => void
   className?: string
   compact?: boolean
@@ -26,15 +25,14 @@ export default function LockedFeatureBanner({
   title,
   description,
   featureType,
-  feature,
   onUpgrade,
   className,
   compact = false,
 }: LockedFeatureBannerProps) {
   const [isHovered, setIsHovered] = useState(false)
 
-  // If a feature is provided but no description, use the standard description
-  const featureDescription = description || (feature ? FEATURE_DESCRIPTIONS[feature] : undefined)
+  // Use description directly, or fallback to a generic message if none provided
+  const featureDescription = description || "This feature is available for premium users."
 
   if (compact) {
     return (
@@ -73,7 +71,9 @@ export default function LockedFeatureBanner({
           </div>
           <div className="flex-1 space-y-1">
             <h3 className="text-lg font-medium text-amber-800 dark:text-amber-300">{title}</h3>
-            {featureDescription && <p className="text-sm text-amber-700 dark:text-amber-400">{featureDescription}</p>}
+            {featureDescription && (
+              <p className="text-sm text-amber-700 dark:text-amber-400">{featureDescription}</p>
+            )}
           </div>
           <Button
             className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600"
