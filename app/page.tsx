@@ -445,7 +445,7 @@ export default function Home() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition duration-200 h-14 px-8 text-lg"
+                  className="border-white/30 text-black hover:bg-white/90 hover:border-white/50 transition duration-200 h-14 px-8 text-lg"
                   >
                   <Link href="#how-it-works" className="flex items-center gap-2">
                       Learn More

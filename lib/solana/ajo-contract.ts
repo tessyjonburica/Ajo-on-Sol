@@ -3,7 +3,9 @@ import { AnchorProvider, Program } from "@project-serum/anchor"
 import { type Connection, PublicKey, SystemProgram, LAMPORTS_PER_SOL } from "@solana/web3.js"
 import type { AnchorWallet } from "@solana/wallet-adapter-react"
 import * as ajoIdl from "./fixed-ajo-idl.json"
-const IDL = ajoIdl as anchor.Idl
+
+// ✅ FIXED: Safer type assertion for the IDL
+const IDL = ajoIdl as unknown as anchor.Idl
 
 // The program ID from the IDL
 export const PROGRAM_ID = new PublicKey("EiKhShgBVKz8bNY4eqAxQByS6CvsCeKVavxFhba38QFk")
@@ -18,6 +20,7 @@ export const getProvider = (connection: Connection, wallet: AnchorWallet) => {
 export const getProgram = (provider: AnchorProvider) => {
   return new Program(IDL, PROGRAM_ID, provider)
 }
+
 
 // Helper function to derive the Ajo account PDA
 export const findAjoAccountPDA = async (name: string, authority: PublicKey) => {
