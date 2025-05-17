@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import Navbar from "@/components/Navbar"
 import SolanaWalletProvider from "./providers/SolanaWalletProvider"
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const inter = Inter({ subsets: ["latin"] }) // Correct usage for next/font/google
 
@@ -27,6 +28,7 @@ export default function RootLayout({
             <div className="flex min-h-screen flex-col">
               <Navbar />
               <Analytics />
+              <SpeedInsights />
               <main className="flex-1">{children}</main>
               <footer className="border-t border-border/40 py-6">
                 <div className="container flex flex-col items-center justify-between gap-4 px-4 text-center md:flex-row md:text-left">
