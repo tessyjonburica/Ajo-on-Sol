@@ -26,6 +26,8 @@ export type Pool = {
   contributionTokenSymbol: string
   frequency: "daily" | "weekly" | "biweekly" | "monthly"
   totalMembers: number
+  maxMembers?: number
+  userPosition?: string
   currentMembers: number
   startDate: Date
   endDate: Date

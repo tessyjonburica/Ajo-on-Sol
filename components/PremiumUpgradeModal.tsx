@@ -21,7 +21,7 @@ import {
   upgradeUserToPremium,
   upgradePoolToPremium,
 } from "@/lib/subscription"
-import { getUpgradeableFeatures, FEATURE_DESCRIPTIONS } from "@/lib/premium"
+
 
 interface PremiumUpgradeModalProps {
   isOpen: boolean

@@ -99,8 +99,16 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       payoutAmount: payoutAmount,
       transactionSignature: transactionSignature
     })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in POST /api/pools/[id]/payout/confirm:", error)
-    return NextResponse.json({ error: "Internal server error", details: error?.message || String(error) }, { status: 500 })
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === "string"
+        ? error
+        : "Unknown error"
+
+    return NextResponse.json({ error: "Internal server error", details: message }, { status: 500 })
   }
-} 
+}

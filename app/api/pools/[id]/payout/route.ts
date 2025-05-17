@@ -145,6 +145,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
   } catch (error) {
     console.error("Error in POST /api/pools/[id]/payout:", error)
-    return NextResponse.json({ error: "Internal server error", details: error?.message || String(error) }, { status: 500 })
+    return NextResponse.json(
+      { 
+        error: "Internal server error", 
+        details: typeof error === "object" && error !== null && "message" in error ? (error as any).message : String(error) 
+      }, 
+      { status: 500 }
+    )
   }
 }

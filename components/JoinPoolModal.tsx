@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useWallet } from '@solana/wallet-adapter-react'
 import {
@@ -25,16 +24,33 @@ interface JoinPoolModalProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
   onSuccess?: () => void
+  autoOpen?: boolean
+  pool?: any  // <-- Added pool prop here
 }
 
-export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }: JoinPoolModalProps) {
+export default function JoinPoolModal({
+  trigger,
+  open,
+  onOpenChange,
+  onSuccess,
+  autoOpen,
+  pool,
+}: JoinPoolModalProps) {
   const router = useRouter()
   const { publicKey, connected } = useWallet()
-  const [poolId, setPoolId] = useState("")
+  const [poolId, setPoolId] = useState<string>(pool?.id || "")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [poolDetails, setPoolDetails] = useState<any | null>(null)
+  const [poolDetails, setPoolDetails] = useState<any | null>(pool || null)
   const [isSearching, setIsSearching] = useState(false)
+
+  // Update poolDetails & poolId if pool prop changes
+  useEffect(() => {
+    if (pool) {
+      setPoolDetails(pool)
+      setPoolId(pool.id)
+    }
+  }, [pool])
 
   const handleSearch = async () => {
     if (!poolId.trim()) {
@@ -47,7 +63,6 @@ export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }
     setPoolDetails(null)
 
     try {
-      // Search for the pool
       const { data, error } = await supabase
         .from("pools")
         .select(`
@@ -99,11 +114,9 @@ export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }
         throw new Error(errorData.error || "Failed to join pool")
       }
 
-      // Success
       if (onOpenChange) onOpenChange(false)
       if (onSuccess) onSuccess()
 
-      // Navigate to the pool page
       router.push(`/pool/${poolId}/${poolDetails.name.toLowerCase().replace(/\s+/g, "-")}`)
     } catch (err: any) {
       console.error("Error joining pool:", err)
@@ -121,27 +134,30 @@ export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }
       </DialogHeader>
 
       <div className="space-y-4 py-4">
-        <div className="space-y-2">
-          <Label htmlFor="pool-id">Pool ID</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="pool-id"
-              placeholder="Enter pool ID"
-              value={poolId}
-              onChange={(e) => setPoolId(e.target.value)}
-              disabled={isLoading || isSearching}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={handleSearch}
-              disabled={isLoading || isSearching || !poolId.trim()}
-            >
-              {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-            </Button>
+        {/* Only show search input if pool prop is NOT passed */}
+        {!pool && (
+          <div className="space-y-2">
+            <Label htmlFor="pool-id">Pool ID</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="pool-id"
+                placeholder="Enter pool ID"
+                value={poolId}
+                onChange={(e) => setPoolId(e.target.value)}
+                disabled={isLoading || isSearching}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={handleSearch}
+                disabled={isLoading || isSearching || !poolId.trim()}
+              >
+                {isSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         {error && <p className="text-sm text-red-500">{error}</p>}
 
@@ -189,7 +205,7 @@ export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }
 
   if (trigger) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open ?? autoOpen} onOpenChange={onOpenChange}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
         {modalContent}
       </Dialog>
@@ -197,7 +213,7 @@ export default function JoinPoolModal({ trigger, open, onOpenChange, onSuccess }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open ?? autoOpen} onOpenChange={onOpenChange}>
       {modalContent}
     </Dialog>
   )

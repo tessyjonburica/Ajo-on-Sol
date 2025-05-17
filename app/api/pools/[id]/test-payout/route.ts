@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/client";
 import { getSolBalance, verifyTransaction } from "@/lib/solana/server";
-import { connection, LAMPORTS_PER_SOL, PublicKey } from "@/lib/solana";
 import { createPayoutTransaction } from "@/lib/solana/client";
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {

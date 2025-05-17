@@ -48,6 +48,8 @@ export async function getPoolById(poolId: string) {
     frequency: data.frequency,
     totalMembers: data.total_members,
     currentMembers: data.current_members,
+    maxMembers: data.max_members,
+    contributionFrequency: data.contribution_frequency,
     startDate: new Date(data.start_date),
     endDate: new Date(data.end_date),
     nextPayoutDate: new Date(data.next_payout_date),
