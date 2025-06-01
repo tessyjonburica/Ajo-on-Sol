@@ -1,6 +1,6 @@
 # Ajo-on-Sol
 
-Ajo-on-Sol is a decentralized savings pool application built on the Solana blockchain. It implements the traditional African "Ajo" (rotating savings) system in a trustless, blockchain-based environment.
+Ajo-on-Sol is a decentralized community savings pool application built on the Solana blockchain. It implements the traditional African "Ajo" (rotating savings) system in a trustless, blockchain-based environment.
 
 ## Overview
 
