@@ -165,52 +165,69 @@ pub mod ajo {
     }
 
     pub fn execute_payout(ctx: Context<ExecutePayout>) -> Result<()> {
-        let pool = &mut ctx.accounts.pool;
-        let recipient = &mut ctx.accounts.recipient;
-        
-        require!(pool.active, AjoError::PoolNotActive);
-        
-        // Verify recipient is next in line
-        let expected_recipient = pool.payout_order[pool.current_cycle as usize].0;
-        require!(
-            recipient.wallet == expected_recipient,
-            AjoError::InvalidPayoutRecipient
-        );
-        
-        // Calculate payout amount
-        let payout_amount = pool.contribution_amount * pool.total_members as u64;
-        
-        match pool.currency {
-            CurrencyType::SOL => {
-                **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= payout_amount;
-                **ctx.accounts.recipient_wallet.try_borrow_mut_lamports()? += payout_amount;
-            },
-            CurrencyType::USDC => {
-                let seeds = &[
-                    b"vault".as_ref(),
-                    pool.to_account_info().key.as_ref(),
-                    &[ctx.accounts.vault.bump],
-                ];
-                let signer = &[&seeds[..]];
-                
-                let cpi_ctx = CpiContext::new_with_signer(
-                    ctx.accounts.token_program.as_ref().expect("Token program required").to_account_info(),
-                    token::Transfer {
-                        from: ctx.accounts.vault_token.as_ref().expect("Vault token account required").to_account_info(),
-                        to: ctx.accounts.recipient_token.as_ref().expect("Recipient token account required").to_account_info(),
-                        authority: ctx.accounts.vault.to_account_info(),
-                    },
-                    signer,
-                );
-                token::transfer(cpi_ctx, payout_amount)?;
-            }
+    let pool = &mut ctx.accounts.pool;
+    let recipient = &mut ctx.accounts.recipient;
+
+    require!(pool.active, AjoError::PoolNotActive);
+
+    // Verify recipient is next in line
+    let expected_recipient = pool.payout_order[pool.current_cycle as usize].0;
+    require!(
+        recipient.wallet == expected_recipient,
+        AjoError::InvalidPayoutRecipient
+    );
+
+    // Calculate payout and fee
+    let total_amount = pool.contribution_amount * pool.total_members as u64;
+    let fee = total_amount / 100; // 1%
+    let payout_amount = total_amount - fee;
+
+    match pool.currency {
+        CurrencyType::SOL => {
+            **ctx.accounts.vault.to_account_info().try_borrow_mut_lamports()? -= total_amount;
+            **ctx.accounts.recipient_wallet.try_borrow_mut_lamports()? += payout_amount;
+            **ctx.accounts.fee_receiver.try_borrow_mut_lamports()? += fee;
+        },
+        CurrencyType::USDC => {
+            let seeds = &[
+                b"vault".as_ref(),
+                pool.to_account_info().key.as_ref(),
+                &[ctx.accounts.vault.bump],
+            ];
+            let signer = &[&seeds[..]];
+
+            // Transfer payout to recipient
+            let cpi_ctx_recipient = CpiContext::new_with_signer(
+                ctx.accounts.token_program.as_ref().expect("Token program required").to_account_info(),
+                token::Transfer {
+                    from: ctx.accounts.vault_token.as_ref().expect("Vault token account required").to_account_info(),
+                    to: ctx.accounts.recipient_token.as_ref().expect("Recipient token account required").to_account_info(),
+                    authority: ctx.accounts.vault.to_account_info(),
+                },
+                signer,
+            );
+            token::transfer(cpi_ctx_recipient, payout_amount)?;
+
+            // Transfer 1% fee to fee_receiver
+            let cpi_ctx_fee = CpiContext::new_with_signer(
+                ctx.accounts.token_program.as_ref().expect("Token program required").to_account_info(),
+                token::Transfer {
+                    from: ctx.accounts.vault_token.as_ref().expect("Vault token account required").to_account_info(),
+                    to: ctx.accounts.fee_receiver_token.as_ref().expect("Fee token account required").to_account_info(),
+                    authority: ctx.accounts.vault.to_account_info(),
+                },
+                signer,
+            );
+            token::transfer(cpi_ctx_fee, fee)?;
         }
-        
-        recipient.has_collected = true;
-        pool.current_cycle += 1;
-        
-        Ok(())
     }
+
+    recipient.has_collected = true;
+    pool.current_cycle += 1;
+
+    Ok(())
+}
+
 }
 
 #[derive(Accounts)]
@@ -295,29 +312,38 @@ pub struct MakeContribution<'info> {
 }
 
 #[derive(Accounts)]
+#[derive(Accounts)]
 pub struct ExecutePayout<'info> {
     #[account(mut)]
     pub pool: Account<'info, PoolAccount>,
-    
+
     #[account(
         mut,
         seeds = [b"member", pool.key().as_ref(), recipient_wallet.key().as_ref()],
         bump = recipient.bump,
     )]
     pub recipient: Account<'info, MemberAccount>,
-    
+
     /// CHECK: Recipient wallet to receive payout
     #[account(mut)]
     pub recipient_wallet: AccountInfo<'info>,
-    
+
     /// CHECK: Vault holding funds
     #[account(mut)]
     pub vault: Account<'info, VaultAccount>,
-    
+
     #[account(mut)]
     pub vault_token: Option<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub recipient_token: Option<Account<'info, TokenAccount>>,
+
+    /// ✅ New: Fee receiver accounts
+    /// CHECK: Fee wallet (SOL)
+    #[account(mut)]
+    pub fee_receiver: AccountInfo<'info>,
+    #[account(mut)]
+    pub fee_receiver_token: Option<Account<'info, TokenAccount>>,
+
     pub token_program: Option<Program<'info, Token>>,
     pub system_program: Program<'info, System>,
-} 
+}
