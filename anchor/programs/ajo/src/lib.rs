@@ -337,7 +337,7 @@ pub struct ExecutePayout<'info> {
     #[account(mut)]
     pub recipient_token: Option<Account<'info, TokenAccount>>,
 
-    /// ✅ New: Fee receiver accounts
+    /// New: Fee receiver accounts
     /// CHECK: Fee wallet (SOL)
     #[account(mut)]
     pub fee_receiver: AccountInfo<'info>,
